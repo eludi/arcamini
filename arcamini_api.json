@@ -1,0 +1,220 @@
+[
+	{
+		"module":"global",
+		"description": "extensions to the global namespace",
+		"callbacks": [
+			{ "function":"load",
+				"parameters": [ ],
+				"returnType": null,
+				"description": "Called after the script has been loaded before entering the main loop"
+			},
+			{ "function":"input",
+				"parameters": [
+					{ "name":"evt", "type":"string" },
+					{ "name":"device", "type":"int" },
+					{ "name":"id", "type":"int" },
+					{ "name":"value", "type":"float" },
+					{ "name":"value2", "type":"float", "defaultValue":null }
+				],
+				"returnType": null,
+				"description": "Called when a user input event occurs"
+			},
+			{ "function":"update",
+				"parameters": [
+					{ "name":"deltaT", "type":"double" }
+				],
+				"returnType": "bool",
+				"description": "Called each frame before draw to update the game state. Return true to keep the main loop running."
+			},
+			{ "function":"draw",
+				"parameters": [ { "name":"gfx", "type":"gfx" } ],
+				"returnType": null,
+				"description": "Called to render a frame after update"
+			},
+			{ "function":"unload",
+				"parameters": [ ],
+				"returnType": null,
+				"description": "Called before the script is unloaded after exiting the main loop"
+			}
+		]
+	},
+	{
+		"module":"window",
+		"functions": [
+			{ "function":"width",
+				"parameters": [ ],
+				"returnType": "int",
+				"description": "Returns the current window width in pixels"
+			},
+			{ "function":"height",
+				"parameters": [ ],
+				"returnType": "int",
+				"description": "Returns the current window height in pixels"
+			},
+			{ "function":"color",
+				"parameters": [ { "name":"color", "type":"uint32" } ],
+				"returnType": null,
+				"description": "Sets the window background color"
+			}
+		]
+	},
+	{
+		"module":"gfx",
+		"functions": [
+			{ "function":"color",
+				"parameters": [
+					{ "name":"color", "type":"uint32" }
+				],
+				"returnType": null
+			},
+			{ "function":"lineWidth",
+				"parameters": [
+					{ "name":"w", "type":"float" }
+				],
+				"returnType": null
+			},
+			{ "function":"fillRect",
+				"parameters": [
+					{ "name":"x", "type":"float" },
+					{ "name":"y", "type":"float" },
+					{ "name":"w", "type":"float" },
+					{ "name":"h", "type":"float" }
+				],
+				"returnType": null
+			},
+			{ "function":"drawRect",
+				"parameters": [
+					{ "name":"x", "type":"float" },
+					{ "name":"y", "type":"float" },
+					{ "name":"w", "type":"float" },
+					{ "name":"h", "type":"float" }
+				],
+				"returnType": null
+			},
+			{ "function":"drawLine",
+				"parameters": [
+					{ "name":"x0", "type":"float" },
+					{ "name":"y0", "type":"float" },
+					{ "name":"x1", "type":"float" },
+					{ "name":"x2", "type":"float" }
+				],
+				"returnType": null
+			},
+			{ "function":"drawImage",
+				"parameters": [
+					{ "name":"image", "type":"uint32" },
+					{ "name":"x", "type":"float" },
+					{ "name":"y", "type":"float" },
+					{ "name":"rot", "type":"float", "defaultValue":0.0 },
+					{ "name":"sc", "type":"float", "defaultValue":1.0 },
+					{ "name":"flip", "type":"int", "defaultValue":0 }
+				],
+				"returnType": null
+			},
+			{ "function":"fillText",
+				"parameters": [
+					{ "name":"font", "type":"uint32" },
+					{ "name":"x", "type":"float" },
+					{ "name":"y", "type":"float" },
+					{ "name":"str", "type":"string" },
+					{ "name":"align", "type":"int", "defaultValue":0 }
+				],
+				"returnType": null
+			}
+		]
+	},
+	{
+		"module":"audio",
+		"functions": [
+			{ "function":"replay",
+				"parameters": [
+					{ "name":"sample", "type":"uint32" },
+					{ "name":"volume", "type":"float", "defaultValue":1.0 },
+					{ "name":"balance", "type":"float", "defaultValue":0.0 },
+					{ "name":"detune", "type":"float", "defaultValue":0.0 }
+				],
+				"returnType": "uint32",
+				"description": "immediately plays a sample identified by its handle"
+			}
+		]
+	},
+	{
+		"module":"resource",
+		"functions": [
+			{ "function":"getImage",
+				"parameters": [
+					{ "name":"name", "type":"string" },
+					{ "name":"scale", "type":"float", "defaultValue":1.0 },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0 },
+					{ "name":"filtering", "type":"int", "defaultValue":1 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"createImage",
+				"parameters": [
+					{ "name":"data", "type":"buffer" },
+					{ "name":"width", "type":"int" },
+					{ "name":"height", "type":"int" },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0 },
+					{ "name":"filtering", "type":"int", "defaultValue":1 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"createSVGImage",
+				"parameters": [
+					{ "name":"svg", "type":"string" },
+					{ "name":"scale", "type":"float", "defaultValue":1.0 },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"getTileGrid",
+				"parameters": [
+					{ "name":"image", "type":"uint32" },
+					{ "name":"tilesX", "type":"int" },
+					{ "name":"tilesY", "type":"int", "defaultValue":1 },
+					{ "name":"borderW", "type":"int", "defaultValue":0 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"getAudio",
+				"parameters": [
+					{ "name":"name", "type":"string" }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"createAudio",
+				"parameters": [
+					{ "name":"data", "type":"buffer" },
+					{ "name":"numChannels", "type":"int", "defaultValue":1 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"getFont",
+				"parameters": [
+					{ "name":"name", "type":"string" },
+					{ "name":"fontSize", "type":"uint32", "defaultValue":16 }
+				],
+				"returnType": "uint32"
+			},
+			{ "function":"setStorageItem",
+				"parameters": [
+					{ "name":"key", "type":"string" },
+					{ "name":"value", "type":"string" }
+				],
+				"returnType": null,
+				"description": "sets a value in an app-specific persistent key-value store"
+			},
+			{ "function":"getStorageItem",
+				"parameters": [
+					{ "name":"key", "type":"string" }
+				],
+				"returnType": "string",
+				"description": "retrieves a value from an app-specific persistent key-value store. Returns NULL if the key does not exist"
+			}
+		]
+	}
+]

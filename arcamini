@@ -1,0 +1,26 @@
+#!/bin/sh
+# arcamini - dispatches to arcalua, arcaqjs, or arcapy based on script suffix
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 [args] <script.lua|script.js|script.py>" >&2
+    exit 99
+fi
+
+# Get last argument (POSIX way)
+for last_arg; do :; done
+
+case "$last_arg" in
+    *.lua)
+        exec ./arcalua "$@"
+        ;;
+    *.js)
+        exec ./arcaqjs "$@"
+        ;;
+    *.py)
+        exec ./arcapy "$@"
+        ;;
+    *)
+        echo "Unknown script type: $last_arg" >&2
+        exit 99
+        ;;
+esac
