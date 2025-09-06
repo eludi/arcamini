@@ -5,14 +5,16 @@ the friendly and lightweight multi-language 2D console game runtime.
 Wait, what do you mean by friendly?
 - easy to learn. Just about [30 functions](arcamini_api.md) providing you the essentials of
   resource loading or generation, drawing, audio, and input handling
-- easy to run and deploy. Pick one of the small runtimes precompiled as single file, add
+- easy to run and deploy. Pick one of the small 
+  [runtimes precompiled as single file](https://github.com/eludi/arcamini/releases), add
   your game logic and assets, and you are ready to go.
 - no artificial limitations. Arcamini is not a fantasy console mimicking specs of devices
   from long ago, but a modern tool making console development easy and fun.
 - Open source and [permissively licensed](LICENSE.md).
 
 Did you say multi-language?
-- yes, arcamini can be used to develop games in Javascript, Python, and Lua. All variants offer
+- yes, arcamini can be used to develop games in [Javascript](https://bellard.org/quickjs/),
+[Python](https://pocketpy.dev/), and [Lua](https://www.lua.org/). All variants offer
   the same feature set and API.
 
 2D...?
@@ -36,7 +38,9 @@ Why *console* game runtime?
   - [functional tests](./test/)
 
 ### Language-specific APIs
-Generally, all arcamini support the same arcamini core APIa and all the default modules and features provided by the respective language runtimes [QucikJS](), [pocketpy](), and [Lua5.4](). For details, refer to their respective documentation at their websites.
+Generally, all arcamini support the same arcamini core APIa and all the default modules and features provided by the respective language runtimes [QuickJS](https://bellard.org/quickjs/),
+[pocketpy](https://pocketpy.dev/), and [Lua5.4](https://www.lua.org/).
+For details, refer to their documentation at their respective websites.
 
 Besides that, some arcamini variants provide a few language-specific extensions
 - arcaqjs
