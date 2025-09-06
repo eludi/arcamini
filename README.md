@@ -31,9 +31,9 @@ Why *console* game runtime?
 - [arcamini API reference](arcamini_api.md)
 
 ### Examples
-  - [render performance test](./tree/main/perf)
-  - [BALLATTAX](./tree/main/ballattax) game
-  - [functional tests](./tree/main/test)
+  - [render performance test](./perf/)
+  - [BALLATTAX](./ballattax/) game
+  - [functional tests](./test/)
 
 ### Language-specific APIs
 Generally, all arcamini support the same arcamini core APIa and all the default modules and features provided by the respective language runtimes [QucikJS](), [pocketpy](), and [Lua5.4](). For details, refer to their respective documentation at their websites.
