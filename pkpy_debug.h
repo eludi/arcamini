@@ -58,6 +58,7 @@ static int dprintf(int sock, const char *fmt, ...) {
 #else
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -72,15 +73,11 @@ static int dprintf(int sock, const char *fmt, ...) {
 static int pkpy_debug_server = -1;
 static int pkpy_debug_client = -1;
 static pkpy_debug_session_cb_t pkpy_debug_break_cb = NULL;
-static char pkpy_debug_breakpoint_name[64] = "breakpoint";
 
 // Forward decl
 static bool pkpy_debug_breakpoint(int argc, py_StackRef argv);
 
 void pkpy_debug_init(int port, const char *breakpointFnName, pkpy_debug_session_cb_t cb) {
-    if (breakpointFnName && strlen(breakpointFnName) < sizeof(pkpy_debug_breakpoint_name))
-        strcpy(pkpy_debug_breakpoint_name, breakpointFnName);
-
     if (port > 0) {
         pkpy_debug_break_cb = cb;
         SOCK_INIT();
@@ -125,7 +122,7 @@ void pkpy_debug_init(int port, const char *breakpointFnName, pkpy_debug_session_
     }
 
     // Register breakpoint() in Python
-    py_bindfunc(py_getmodule("__main__"), pkpy_debug_breakpoint_name, pkpy_debug_breakpoint);
+    py_bindfunc(py_getmodule("__main__"), breakpointFnName, pkpy_debug_breakpoint);
 }
 
 void pkpy_debug_poll(void) {
