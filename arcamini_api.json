@@ -2,6 +2,16 @@
 	{
 		"module":"global",
 		"description": "extensions to the global namespace",
+		"functions": [
+			{ "function":"breakpoint",
+				"parameters": [
+					{ "name":"args", "type":"any", "defaultValue":null },
+					{ "name":"...", "type":"any", "defaultValue":null }
+				],
+				"returnType": "uint32",
+				"description": "breaks if a debugger is attached and passes its argument list to it"
+			}
+		],
 		"callbacks": [
 			{ "function":"load",
 				"parameters": [ ],
@@ -40,6 +50,7 @@
 	},
 	{
 		"module":"window",
+		"description": "functions to query and manipulate the application window",
 		"functions": [
 			{ "function":"width",
 				"parameters": [ ],
@@ -60,6 +71,7 @@
 	},
 	{
 		"module":"gfx",
+		"description": "2D graphics context passed to the draw() callback",
 		"functions": [
 			{ "function":"color",
 				"parameters": [
@@ -125,6 +137,7 @@
 	},
 	{
 		"module":"audio",
+		"description": "audio playback functions",
 		"functions": [
 			{ "function":"replay",
 				"parameters": [
@@ -140,6 +153,7 @@
 	},
 	{
 		"module":"resource",
+		"description": "functions to load and create images, audio samples and fonts",
 		"functions": [
 			{ "function":"getImage",
 				"parameters": [
@@ -153,7 +167,7 @@
 			},
 			{ "function":"createImage",
 				"parameters": [
-					{ "name":"data", "type":"buffer" },
+					{ "name":"data", "type":"array<uint32>", "description":"image data as array of uint32 RGBA pixels, or as Uint32Array (Javascript only)" },
 					{ "name":"width", "type":"int" },
 					{ "name":"height", "type":"int" },
 					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
@@ -188,7 +202,7 @@
 			},
 			{ "function":"createAudio",
 				"parameters": [
-					{ "name":"data", "type":"buffer" },
+					{ "name":"data", "type":"array<float>", "description":"PCM audio samples either passed as array of floats [-1.0, 1.0], or as Float32Array (Javascript only)" },
 					{ "name":"numChannels", "type":"int", "defaultValue":1 }
 				],
 				"returnType": "uint32"

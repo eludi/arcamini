@@ -27,6 +27,8 @@ Why *console* game runtime?
   games are never developed on the device itself but on normal PCs, the games run fine there
   as well.
 
+## Documentation
+- [arcamini API reference](arcamini_api.md)
 
 
 ## License
