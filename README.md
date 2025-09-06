@@ -3,13 +3,12 @@
 the friendly and lightweight multi-language 2D console game runtime.
 
 Wait, what do you mean by friendly?
-- easy to learn. Just about 20 functions providing you the essentials of resource loading or generation,
-  drawing, audio, and input handling
+- easy to learn. Just about [30 functions](arcamini_api.md) providing you the essentials of
+  resource loading or generation, drawing, audio, and input handling
 - easy to run and deploy. Pick one of the small runtimes precompiled as single file, add
   your game logic and assets, and you are ready to go.
-- no artificial limitations. Arcamini is not a fantasy console
-  with specs similar to devices from long ago, but a modern
-  tool making console development easy and fun.
+- no artificial limitations. Arcamini is not a fantasy console mimicking specs of devices
+  from long ago, but a modern tool making console development easy and fun.
 - Open source and [permissively licensed](LICENSE.md).
 
 Did you say multi-language?
@@ -28,6 +27,7 @@ Why *console* game runtime?
   as well.
 
 ## Documentation
+
 - [arcamini API reference](arcamini_api.md)
 
 
