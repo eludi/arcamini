@@ -38,8 +38,8 @@ Why *console* game runtime?
   - [functional tests](./test/)
 
 ### Language-specific APIs
-Generally, all arcamini support the same arcamini core APIa and all the default modules and features provided by the respective language runtimes [QuickJS](https://bellard.org/quickjs/),
-[pocketpy](https://pocketpy.dev/), and [Lua5.4](https://www.lua.org/).
+Generally, all arcamini variants support the same arcamini core APIs. Also all the default modules and features provided by the respective implementations [QuickJS](https://bellard.org/quickjs/),
+[pocketpy](https://pocketpy.dev/), and [Lua5.4](https://www.lua.org/) are available.
 For details, refer to their documentation at their respective websites.
 
 Besides that, some arcamini variants provide a few language-specific extensions
