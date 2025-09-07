@@ -9,7 +9,7 @@ Wait, what do you mean by friendly?
   [runtimes precompiled as single file](https://github.com/eludi/arcamini/releases), add
   your game logic and assets, and you are ready to go.
 - no artificial limitations. Arcamini is not a fantasy console mimicking specs of devices
-  from long ago, but a modern tool making console development easy and fun.
+  from long ago, but a modern tool boosting your pace when starting with console game development.
 - Open source and [permissively licensed](LICENSE.md).
 
 Did you say multi-language?
