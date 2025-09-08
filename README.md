@@ -2,9 +2,9 @@
 
 **arcamini** is a friendly, lightweight, and multi-language runtime for developing 2D console games.
 
-- 🚀 **Easy to learn:** About [30 core functions](arcamini_api.md) for resource management, drawing, audio, and input.
+- 🎓 **Easy to learn:** About [30 core functions](arcamini_api.md) for resource management, drawing, audio, and input.
 - 📦 **Easy to deploy:** Download a [precompiled single-file runtime](https://github.com/eludi/arcamini/releases), add your game logic and assets, and you're ready to go.
-- ✨ **No artificial limitations:** arcamini is not a fantasy console with outdated specs, but a modern tool for rapid console game development.
+- 🚀 **No artificial limitations:** arcamini is not a fantasy console with outdated specs, but a modern tool for rapid console game development.
 - 👐 **Open source:** [MIT licensed](LICENSE.md).
 
 ## Multi-language Support
