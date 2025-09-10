@@ -748,6 +748,8 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
 
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback) {
     JSContext *ctx = (JSContext*)callback;
+    arcmWindowCloseOnButton67(id, button, value);
+
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue fn = JS_GetPropertyStr(ctx, global, "input");
     if (JS_IsFunction(ctx, fn)) {

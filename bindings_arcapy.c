@@ -380,16 +380,12 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
 
 	py_newstr(val, "axis");
 	py_push(val);
-
 	py_newint(val, id);
 	py_push(val);
-
 	py_newint(val, axis);
 	py_push(val);
-
 	py_newfloat(val, value);
 	py_push(val);
-
 	py_pushnone();
 
 	if(!py_vectorcall(5, 0))
@@ -398,6 +394,8 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
 
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback) {
 	(void)callback;
+	arcmWindowCloseOnButton67(id, button, value);
+
 	py_Ref fnInput = py_getglobal(py_name("input"));
 	if(!fnInput)
 		return;
@@ -408,16 +406,12 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
 
 	py_newstr(val, "button");
 	py_push(val);
-
 	py_newint(val, id);
 	py_push(val);
-
 	py_newint(val, button);
 	py_push(val);
-
 	py_newfloat(val, value);
 	py_push(val);
-
 	py_pushnone();
 
 	if(!py_vectorcall(5, 0))

@@ -337,6 +337,8 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* udata) {
 }
 
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* udata) {
+    arcmWindowCloseOnButton67(id, button, value);
+
     lua_State* L = (lua_State*)udata;
     if(lua_getglobal(L, "input") != LUA_TFUNCTION)
         return;

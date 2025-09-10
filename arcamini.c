@@ -160,3 +160,16 @@ int arcmDispatchInputEvents(void* callback) {
 	return 0;
 }
 
+void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value) {
+	static uint16_t btnState[8] = {0};
+	if(id<8 && button<16) {
+		const uint16_t mask = (1 << button);
+		if(value != 0.0f)
+			btnState[id] |= mask;
+		else
+			btnState[id] &= ~mask;
+		// close window if both buttons 6+7 (escape+tab) are pressed:
+		if(btnState[id] & (1 << 6) && btnState[id] & (1 << 7))
+			WindowClose();
+	}
+}
