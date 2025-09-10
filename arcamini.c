@@ -170,6 +170,6 @@ void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value) {
 			btnState[id] &= ~mask;
 		// close window if both buttons 6+7 (escape+tab) are pressed:
 		if(btnState[id] & (1 << 6) && btnState[id] & (1 << 7))
-			WindowClose();
+			WindowEmitClose();
 	}
 }

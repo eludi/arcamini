@@ -27,7 +27,7 @@ Called when a user input event occurs
 ### callback function update
 Called each frame before draw to update the game state. Return true to keep the main loop running.
 #### Parameters:
-- {double} deltaT
+- {double} deltaT - time in seconds since the last call to update()
 
 #### Returns:
 - {bool}
@@ -35,10 +35,10 @@ Called each frame before draw to update the game state. Return true to keep the 
 ### callback function draw
 Called to render a frame after update
 #### Parameters:
-- {gfx} gfx
+- {gfx} gfx - the graphics context to call draw functions on
 
 ### callback function unload
-Called before the script is unloaded after exiting the main loop
+Called before the script is unloaded after exiting the main loop. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together.
 
 ## module window
 

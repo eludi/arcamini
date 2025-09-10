@@ -31,20 +31,20 @@
 			},
 			{ "function":"update",
 				"parameters": [
-					{ "name":"deltaT", "type":"double" }
+					{ "name":"deltaT", "type":"double", "description": "time in seconds since the last call to update()" }
 				],
 				"returnType": "bool",
 				"description": "Called each frame before draw to update the game state. Return true to keep the main loop running."
 			},
 			{ "function":"draw",
-				"parameters": [ { "name":"gfx", "type":"gfx" } ],
+				"parameters": [ { "name":"gfx", "type":"gfx", "description": "the graphics context to call draw functions on" } ],
 				"returnType": null,
 				"description": "Called to render a frame after update"
 			},
 			{ "function":"unload",
 				"parameters": [ ],
 				"returnType": null,
-				"description": "Called before the script is unloaded after exiting the main loop"
+				"description": "Called before the script is unloaded after exiting the main loop. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together."
 			}
 		]
 	},
