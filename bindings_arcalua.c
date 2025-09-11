@@ -13,11 +13,12 @@ extern const char* ResourceArchiveName();
 
 static void handleException(lua_State *L) {
     const char* msg = lua_tostring(L, -1);
-    if(msg) {
-        printf("Lua Exception: %s\n", msg);
-    } else {
-        printf("Lua Exception: (error object is not a string)\n");
-    }
+    if(!msg)
+        msg = "Lua exception (error object is not a string)";
+    //luaL_traceback(L, L, msg, 1);
+    //msg = lua_tostring(L, -1);
+    fprintf(stderr, "--- ERROR ---\n%s\n", msg);
+    arcmShowError(msg);
     lua_pop(L, 1);
     WindowEmitClose();
 }

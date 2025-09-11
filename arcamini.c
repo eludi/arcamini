@@ -173,3 +173,7 @@ void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value) {
 			WindowEmitClose();
 	}
 }
+
+void arcmShowError(const char* msg) {
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "arcamini ERROR", msg, NULL);
+}

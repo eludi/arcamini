@@ -8,11 +8,13 @@
 extern char* ResourceGetText(const char* name);
 
 static bool handleException() {
-	// todo: forward exception to debugger if attached
 	char* msg = py_formatexc();
-	if(msg)
+	if(msg) {
 		fprintf(stderr, "--- ERROR ---\n%s\n", msg);
-	free(msg);
+		// todo: forward exception to debugger if attached
+		arcmShowError(msg);
+		free(msg);
+	}
 	WindowEmitClose();
 	return false;
 }

@@ -79,4 +79,5 @@ extern void arcmStorageClose();
 extern int arcmDispatchInputEvents(void* callback);
 extern void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value);
 extern void WindowEmitClose();
+extern void arcmShowError(const char* msg);
 ///@}
