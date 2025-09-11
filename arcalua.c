@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 	if(dispatchLifecycleEvent("load", vm)) {
 		while(WindowIsOpen()) {
 			if (debug_port > 0)
-				pkpy_debug_poll();
+				arcalua_debug_poll();
 			if(!dispatchUpdateEvent(WindowDeltaT(), vm))
 				break;
 
