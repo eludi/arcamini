@@ -110,23 +110,24 @@ int main(int argc, char** argv) {
 	for(size_t i=0; i<WindowNumControllers(); ++i)
 		WindowControllerOpen(i, 0);
 	WindowEventHandler(arcmDispatchInputEvents, vm);
-	dispatchLifecycleEvent("load", vm);
 
-	while(WindowIsOpen()) {
-		if (debug_port > 0)
-			arcalua_debug_poll();
-		if(!dispatchUpdateEvent(WindowDeltaT(), vm))
-			break;
+	if(dispatchLifecycleEvent("load", vm)) {
+		while(WindowIsOpen()) {
+			if (debug_port > 0)
+				pkpy_debug_poll();
+			if(!dispatchUpdateEvent(WindowDeltaT(), vm))
+				break;
 
-		gfxBeginFrame(WindowGetClearColor());
-		dispatchDrawEvent(vm);
-		gfxEndFrame();
+			gfxBeginFrame(WindowGetClearColor());
+			dispatchDrawEvent(vm);
+			gfxEndFrame();
 
-		if(WindowUpdate()!=0)
-			break;
+			if(WindowUpdate()!=0)
+				break;
+		}
+		dispatchLifecycleEvent("unload", vm);
 	}
 
-	dispatchLifecycleEvent("unload", vm);
 	if(debug) {
 		printf("Cleaning up...");
 		printf(" graphics..."); fflush(stdout);

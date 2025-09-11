@@ -327,11 +327,14 @@ void shutdownVM(void* vm) {
 
 // --- event dispatchers ---
 
-void dispatchLifecycleEvent(const char* evtName, void* udata) {
+bool dispatchLifecycleEvent(const char* evtName, void* udata) {
     lua_State* L = (lua_State*)udata;
 
-    if(lua_getglobal(L, evtName) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0) != LUA_OK)
+    if(lua_getglobal(L, evtName) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0) != LUA_OK) {
         handleException(L);
+        return false;
+    }
+    return true;
 }
 
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* udata) {

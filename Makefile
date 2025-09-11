@@ -75,4 +75,4 @@ bindings_arcaqjs.o: bindings.h bindings_arcaqjs.c arcamini.h
 	$(CC) $(CFLAGS) $(INCDIR) -c $< -o $@
 
 clean:
-	$(RM) $(OBJPY) $(OBJQJS) $(EXEPY) $(EXEQJS)
+	$(RM) $(OBJPY) $(OBJQJS)  $(OBJLUA) $(EXEPY) $(EXEQJS) $(EXELUA)

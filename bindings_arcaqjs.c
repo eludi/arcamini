@@ -706,18 +706,22 @@ void shutdownVM(void* context) {
 
 // --- event dispatchers ---
 
-void dispatchLifecycleEvent(const char* evtName, void* callback) {
+bool dispatchLifecycleEvent(const char* evtName, void* callback) {
     JSContext *ctx = (JSContext*)callback;
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue fn = JS_GetPropertyStr(ctx, global, evtName);
+    bool ok = true;
     if (JS_IsFunction(ctx, fn)) {
         JSValue ret = JS_Call(ctx, fn, global, 0, NULL);
-        if (JS_IsException(ret))
+        if (JS_IsException(ret)) {
             handleException(ctx);
+            ok = false;
+        }
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);
     JS_FreeValue(ctx, global);
+    return ok;
 }
 
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
