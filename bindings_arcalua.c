@@ -11,6 +11,17 @@
 
 extern const char* ResourceArchiveName();
 
+static void handleException(lua_State *L) {
+    const char* msg = lua_tostring(L, -1);
+    if(msg) {
+        printf("Lua Exception: %s\n", msg);
+    } else {
+        printf("Lua Exception: (error object is not a string)\n");
+    }
+    lua_pop(L, 1);
+    WindowEmitClose();
+}
+
 // --- Window Functions ---
 static int lua_WindowWidth(lua_State *L) {
     lua_pushinteger(L, WindowWidth());
@@ -319,8 +330,8 @@ void shutdownVM(void* vm) {
 void dispatchLifecycleEvent(const char* evtName, void* udata) {
     lua_State* L = (lua_State*)udata;
 
-    if(lua_getglobal(L, evtName) == LUA_TFUNCTION)
-        lua_call(L, 0, 0);
+    if(lua_getglobal(L, evtName) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0) != LUA_OK)
+        handleException(L);
 }
 
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* udata) {
@@ -333,7 +344,8 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* udata) {
     lua_pushinteger(L, axis);
     lua_pushnumber(L, value);
     lua_pushnil(L); // no second value
-    lua_call(L, 5, 0);
+    if(lua_pcall(L, 5, 0, 0) != LUA_OK)
+        handleException(L);
 }
 
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* udata) {
@@ -348,7 +360,8 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* udata) {
     lua_pushinteger(L, button);
     lua_pushnumber(L, value);
     lua_pushnil(L); // no second value
-    lua_call(L, 5, 0);
+    if(lua_pcall(L, 5, 0, 0) != LUA_OK)
+        handleException(L);
 }
 
 bool dispatchUpdateEvent(double deltaT, void* udata) {
@@ -356,7 +369,10 @@ bool dispatchUpdateEvent(double deltaT, void* udata) {
     if(lua_getglobal(L, "update") != LUA_TFUNCTION)
         return false;
     lua_pushnumber(L, deltaT);
-    lua_call(L, 1, 1);
+    if(lua_pcall(L, 1, 1, 0) != LUA_OK) {
+        handleException(L);
+        return false;
+    }
     const bool keepRunning = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return keepRunning;
@@ -367,5 +383,6 @@ void dispatchDrawEvent(void* udata) {
     if(lua_getglobal(L, "draw") != LUA_TFUNCTION)
         return;
     lua_getfield(L, LUA_REGISTRYINDEX, "arcalua_gfx");
-    lua_call(L, 1, 0);
+    if(lua_pcall(L, 1, 0, 0) != LUA_OK)
+        handleException(L);
 }

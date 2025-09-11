@@ -6,6 +6,12 @@
 
 extern char* ResourceGetText(const char* name);
 
+static bool handleException() {
+	// todo: forward exception to debugger if attached
+	WindowEmitClose();
+	return false;
+}
+
 // --- window bindings ---
 static bool py_WindowWidth(int argc, py_StackRef argv) {
 	py_newint(py_retval(), WindowWidth());
@@ -18,8 +24,7 @@ static bool py_WindowHeight(int argc, py_StackRef argv) {
 static bool py_WindowClearColor(int argc, py_StackRef argv) {
 	int64_t color;
 	if(!py_castint(py_arg(0), &color)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	WindowClearColor((uint32_t)color);
 	py_newnone(py_retval());
@@ -30,8 +35,7 @@ static bool py_WindowClearColor(int argc, py_StackRef argv) {
 static bool py_gfxColor(int argc, py_StackRef argv) {
 	int64_t color;
 	if(!py_castint(py_arg(0), &color)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	gfxColor((uint32_t)color);
 	py_newnone(py_retval());
@@ -41,8 +45,7 @@ static bool py_gfxColor(int argc, py_StackRef argv) {
 static bool py_gfxLineWidth(int argc, py_StackRef argv) {
 	float w;
 	if(!py_castfloat32(py_arg(0), &w)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	gfxLineWidth(w);
 	py_newnone(py_retval());
@@ -55,8 +58,7 @@ static bool py_gfxDrawRect(int argc, py_StackRef argv) {
 	   !py_castfloat32(py_arg(1), &y) ||
 	   !py_castfloat32(py_arg(2), &w) ||
 	   !py_castfloat32(py_arg(3), &h)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	gfxDrawRect(x, y, w, h);
 	py_newnone(py_retval());
@@ -69,8 +71,7 @@ static bool py_gfxFillRect(int argc, py_StackRef argv) {
 	   !py_castfloat32(py_arg(1), &y) ||
 	   !py_castfloat32(py_arg(2), &w) ||
 	   !py_castfloat32(py_arg(3), &h)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	gfxFillRect(x, y, w, h);
 	py_newnone(py_retval());
@@ -83,8 +84,7 @@ static bool py_gfxDrawLine(int argc, py_StackRef argv) {
 	   !py_castfloat32(py_arg(1), &y0) ||
 	   !py_castfloat32(py_arg(2), &x1) ||
 	   !py_castfloat32(py_arg(3), &y1)) {
-		py_printexc();
-		return false;
+		return handleException();
 	}
 	gfxDrawLine(x0, y0, x1, y1);
 	py_newnone(py_retval());
@@ -96,11 +96,16 @@ static bool py_gfxDrawImage(int argc, py_StackRef argv) {
 	float x, y, rot = 0.0f, sc = 1.0f;
 	if(!py_castint(py_arg(0), &img) ||
 	   !py_castfloat32(py_arg(1), &x) ||
-	   !py_castfloat32(py_arg(2), &y))
-		return false;
-	if(argc > 3) py_castfloat32(py_arg(3), &rot);
-	if(argc > 4) py_castfloat32(py_arg(4), &sc);
-	if(argc > 5) py_castint(py_arg(5), &flip);
+	   !py_castfloat32(py_arg(2), &y)) {
+		return handleException();
+	}
+	if(argc > 3 && !py_castfloat32(py_arg(3), &rot))
+		return handleException();
+	if(argc > 4 && !py_castfloat32(py_arg(4), &sc))
+		return handleException();
+	if(argc > 5 && !py_castint(py_arg(5), &flip))
+		return handleException();
+
 	gfxDrawImage((uint32_t)img, x, y, rot, sc, (int)flip);
 	py_newnone(py_retval());
 	return true;
@@ -113,9 +118,11 @@ static bool py_gfxFillTextAlign(int argc, py_StackRef argv) {
 	const char* str = py_tostr(py_retval());
 	if(!py_castint(py_arg(0), &font) ||
 	   !py_castfloat32(py_arg(1), &x) ||
-	   !py_castfloat32(py_arg(2), &y))
-		return false;
-	if(argc > 4) py_castint(py_arg(4), &align);
+	   !py_castfloat32(py_arg(2), &y)) {
+		return handleException();
+	}
+	if(argc > 4 && !py_castint(py_arg(4), &align))
+		return handleException();
 	//printf("gfxFillTextAlign(%ld, %f, %f, \"%s\", %d)\n", font, x, y, str, (int)align);
 	gfxFillTextAlign((uint32_t)font, x, y, str, (int)align);
 	py_newnone(py_retval());
@@ -127,10 +134,14 @@ static bool py_AudioReplay(int argc, py_StackRef argv) {
 	int64_t sample;
 	float vol=1.0f, bal=0.0f, det=0.0f;
 	if(!py_castint(py_arg(0), &sample))
-		return false;
-	if(argc > 1) py_castfloat32(py_arg(1), &vol);
-	if(argc > 2) py_castfloat32(py_arg(2), &bal);
-	if(argc > 3) py_castfloat32(py_arg(3), &det);
+		return handleException();
+	if(argc > 1 && !py_castfloat32(py_arg(1), &vol))
+		return handleException();
+	if(argc > 2 && !py_castfloat32(py_arg(2), &bal))
+		return handleException();
+	if(argc > 3 && !py_castfloat32(py_arg(3), &det))
+		return handleException();
+
 	uint32_t track = AudioReplay((uint32_t)sample, vol, bal, det);
 	if(track == UINT32_MAX)
 		py_newnone(py_retval());
@@ -144,10 +155,15 @@ static bool py_ResourceGetImage(int argc, py_StackRef argv) {
 	const char* name = py_tostr(py_arg(0));
 	float scale = 1.0f, centerX=0.0f, centerY=0.0f;
 	int64_t filtering = 1;
-	if(argc > 1) py_castfloat32(py_arg(1), &scale);
-	if(argc > 2) py_castfloat32(py_arg(2), &centerX);
-	if(argc > 3) py_castfloat32(py_arg(3), &centerY);
-	if(argc > 4) py_castint(py_arg(4), &filtering);
+	if(argc > 1 && !py_castfloat32(py_arg(1), &scale))
+		return handleException();
+	if(argc > 2 && !py_castfloat32(py_arg(2), &centerX))
+		return handleException();
+	if(argc > 3 && !py_castfloat32(py_arg(3), &centerY))
+		return handleException();
+	if(argc > 4 && !py_castint(py_arg(4), &filtering))
+		return handleException();
+
 	uint32_t handle = arcmResourceGetImage(name, scale, centerX, centerY, filtering);
 	py_newint(py_retval(), (int64_t)handle);
 	return true;
@@ -157,10 +173,8 @@ static bool py_ResourceGetImage(int argc, py_StackRef argv) {
 static bool py_ResourceCreateImage(int argc, py_StackRef argv) {
 	// read data from an array/list containing uint32_t color values:
 	const size_t numItems = py_islist(py_arg(0)) ? py_list_len(py_arg(0)) : 0;
-	if(!numItems) {
-		fprintf(stderr, "resource.createImage() expects non-empty list containing numeric color values as first argument\n");
-		return false;
-	}
+	if(!numItems)
+		return TypeError("resource.createImage() expects non-empty list containing numeric color values as first argument");
 
 	size_t numBytes = numItems * sizeof(uint32_t);
 	uint32_t* data = malloc(numBytes);
@@ -169,8 +183,7 @@ static bool py_ResourceCreateImage(int argc, py_StackRef argv) {
 		py_ItemRef item = py_list_getitem(py_arg(0), i);
 		if(!py_castint(item, &color) || color<0 || color>0xFFFFFFFF) {
 			free(data);
-			fprintf(stderr, "resource.createImage() argument 0 expects numeric color value at position %zu\n", i);
-			return false;
+			return ValueError("resource.createImage() argument 0 expects numeric color value at position %i\n", (int64_t)i);
 		}
 		data[i] = (uint32_t)color;
 	}
@@ -178,18 +191,19 @@ static bool py_ResourceCreateImage(int argc, py_StackRef argv) {
 	int64_t width, height, filtering = 1;
 	float centerX = 0.0f, centerY = 0.0f;
 	if(!py_castint(py_arg(1), &width) ||
-	   !py_castint(py_arg(2), &height)) {
-		py_printexc();
-		return false;
-	}
+	   !py_castint(py_arg(2), &height))
+		return handleException();
 	if(width*height < numItems) {
 		free(data);
-		fprintf(stderr, "resource.createImage() argument 1 expects width*height >= %zu\n", numItems);
-		return false;
+		return ValueError("resource.createImage() argument 1 expects width*height >= %zu\n", numItems);
 	}
-	if(argc > 3) py_castfloat32(py_arg(3), &centerX);
-	if(argc > 4) py_castfloat32(py_arg(4), &centerY);
-	if(argc > 5) py_castint(py_arg(5), &filtering);
+	if(argc > 3 && !py_castfloat32(py_arg(3), &centerX))
+		return handleException();
+	if(argc > 4 && !py_castfloat32(py_arg(4), &centerY))
+		return handleException();
+	if(argc > 5 && !py_castint(py_arg(5), &filtering))
+		return handleException();
+
 	uint32_t handle = arcmResourceCreateImage((uint8_t*)data, (int)width, (int)height, centerX, centerY, (int)filtering);
 	free(data);
 	py_newint(py_retval(), (int64_t)handle);
@@ -200,9 +214,13 @@ static bool py_ResourceCreateImage(int argc, py_StackRef argv) {
 static bool py_ResourceCreateSVGImage(int argc, py_StackRef argv) {
 	const char* svg = py_tostr(py_arg(0));
 	float scale = 1.0f, centerX=0.0f, centerY=0.0f;
-	if(argc > 1) py_castfloat32(py_arg(1), &scale);
-	if(argc > 2) py_castfloat32(py_arg(2), &centerX);
-	if(argc > 3) py_castfloat32(py_arg(3), &centerY);
+	if(argc > 1 && !py_castfloat32(py_arg(1), &scale))
+		return handleException();
+	if(argc > 2 && !py_castfloat32(py_arg(2), &centerX))
+		return handleException();
+	if(argc > 3 && !py_castfloat32(py_arg(3), &centerY))
+		return handleException();
+
 	uint32_t handle = arcmResourceCreateSVGImage(svg, scale, centerX, centerY);
 	py_newint(py_retval(), (int64_t)handle);
 	return true;
@@ -210,11 +228,13 @@ static bool py_ResourceCreateSVGImage(int argc, py_StackRef argv) {
 
 static bool py_ResourceGetTileGrid(int argc, py_StackRef argv) {
 	int64_t img, tilesX, tilesY = 1, borderW = 0;
-	if(!py_castint(py_arg(0), &img) ||
-	   !py_castint(py_arg(1), &tilesX))
-		return false;
-	if(argc > 2) py_castint(py_arg(2), &tilesY);
-	if(argc > 3) py_castint(py_arg(3), &borderW);
+	if(!py_castint(py_arg(0), &img) || !py_castint(py_arg(1), &tilesX))
+		return handleException();
+	if(argc > 2 && !py_castint(py_arg(2), &tilesY))
+		return handleException();
+	if(argc > 3 && !py_castint(py_arg(3), &borderW))
+		return handleException();
+
 	size_t handle = gfxImageTileGrid((uint32_t)img, (uint32_t)tilesX, (uint32_t)tilesY, (uint32_t)borderW);
 	py_newint(py_retval(), (int64_t)handle);
 	return true;
@@ -231,10 +251,8 @@ static bool py_ResourceGetAudio(int argc, py_StackRef argv) {
 static bool py_ResourceCreateAudio(int argc, py_StackRef argv) {
 	// read data from an array/list containing float sample values:
 	const size_t numSamples = py_islist(py_arg(0)) ? py_list_len(py_arg(0)) : 0;
-	if(!numSamples) {
-		fprintf(stderr, "resource.createAudio() expects non-empty list containing numeric sample values as first argument\n");
-		return false;
-	}
+	if(!numSamples)
+		return TypeError("resource.createAudio() expects non-empty list containing numeric sample values as first argument");
 
 	size_t numBytes = numSamples * sizeof(float);
 	float* data = malloc(numBytes);
@@ -242,13 +260,13 @@ static bool py_ResourceCreateAudio(int argc, py_StackRef argv) {
 		py_ItemRef item = py_list_getitem(py_arg(0), i);
 		if(!py_castfloat32(item, &data[i]) || data[i] < -1.0f || data[i] > 1.0f) {
 			free(data);
-			fprintf(stderr, "resource.createAudio() argument 0 expects numeric sample value between -1.0 and 1.0 at position %zu\n", i);
-			return false;
+			return ValueError("resource.createAudio() argument 0 expects numeric sample value between -1.0 and 1.0 at position %i\n", (int64_t)i);
 		}
 	}
 
 	int64_t numChannels = 1;
-	if(argc > 1) py_castint(py_arg(1), &numChannels);
+	if(argc > 1 && !py_castint(py_arg(1), &numChannels)) 
+		return handleException();
 	size_t handle = AudioUploadPCM(data, numSamples, numChannels, 0);
 	py_newint(py_retval(), (int64_t)handle);
 	return true;
@@ -259,7 +277,7 @@ static bool py_ResourceGetFont(int argc, py_StackRef argv) {
 	const char* name = py_tostr(py_arg(0));
 	int64_t fontSize;
 	if(!py_castint(py_arg(1), &fontSize))
-		return false;
+		return handleException();
 	size_t handle = ResourceGetFont(name, (uint32_t)fontSize);
 	py_newint(py_retval(), (int64_t)handle);
 	return true;
@@ -346,7 +364,7 @@ void* initVM(const char* script, const char* scriptName) {
 
 	// Evaluate user script
 	bool ok = py_exec(script, scriptName, EXEC_MODE, NULL);
-	if(!ok) {
+	if(!ok || py_checkexc(false)) {
 		py_printexc();
 		shutdownVM(ctx);
 		return NULL;

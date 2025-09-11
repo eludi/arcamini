@@ -78,4 +78,5 @@ extern void arcmStorageInit(const char* appName, const char* scriptBaseName);
 extern void arcmStorageClose();
 extern int arcmDispatchInputEvents(void* callback);
 extern void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value);
+extern void WindowEmitClose();
 ///@}

@@ -35,6 +35,13 @@ static void js_print_exception(JSContext *ctx, JSValueConst exc) {
     JS_FreeValue(ctx, stack);
 }
 
+static void handleException(JSContext *ctx) {
+    JSValue exc = JS_GetException(ctx);
+    js_print_exception(ctx, exc);
+    JS_FreeValue(ctx, exc);
+    WindowEmitClose();
+}
+
 static int JS_ToFloat64Default(JSContext *ctx, double *pres, JSValueConst val, double defaultValue) {
     if (JS_IsUndefined(val)) {
         *pres = defaultValue;
@@ -245,9 +252,7 @@ static JSValue require(JSContext *ctx, const char *filename) {
     free(buf);
 
     if (JS_IsException(ret)) {
-        JSValue exc = JS_GetException(ctx);
-        js_print_exception(ctx, exc);
-        JS_FreeValue(ctx, exc);
+        handleException(ctx);
         JS_FreeValue(ctx, ret);
         return JS_UNDEFINED;
     }
@@ -286,9 +291,9 @@ static JSValue js_WindowHeight(JSContext *ctx, JSValueConst this_val, int argc, 
 }
 
 static JSValue js_WindowClearColor(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    uint32_t color;
-    if (JS_ToUint32(ctx, &color, argv[0]))
-        return JS_ThrowTypeError(ctx, "WindowClearColor expects an integer color");
+    uint32_t color = 0;
+    if (JS_ToUint32(ctx, &color, argv[0]) || color == 0)
+        return JS_ThrowTypeError(ctx, "window.color(value) expects a non-zero integer color value");
     WindowClearColor(color);
     return JS_UNDEFINED;
 }
@@ -707,11 +712,8 @@ void dispatchLifecycleEvent(const char* evtName, void* callback) {
     JSValue fn = JS_GetPropertyStr(ctx, global, evtName);
     if (JS_IsFunction(ctx, fn)) {
         JSValue ret = JS_Call(ctx, fn, global, 0, NULL);
-        if (JS_IsException(ret)) {
-            JSValue exc = JS_GetException(ctx);
-            js_print_exception(ctx, exc);
-            JS_FreeValue(ctx, exc);
-        }
+        if (JS_IsException(ret))
+            handleException(ctx);
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);
@@ -731,11 +733,8 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
 
         JSValue argv[5] = { evt, device, id, val, val2 };
         JSValue ret = JS_Call(ctx, fn, global, 5, argv);
-        if (JS_IsException(ret)) {
-            JSValue exc = JS_GetException(ctx);
-            js_print_exception(ctx, exc);
-            JS_FreeValue(ctx, exc);
-        }
+        if (JS_IsException(ret))
+            handleException(ctx);
         JS_FreeValue(ctx, ret);
         JS_FreeValue(ctx, evt);
         JS_FreeValue(ctx, device);
@@ -761,11 +760,8 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
 
         JSValue argv[5] = { evt, device, id, val, val2 };
         JSValue ret = JS_Call(ctx, fn, global, 5, argv);
-        if (JS_IsException(ret)) {
-            JSValue exc = JS_GetException(ctx);
-            js_print_exception(ctx, exc);
-            JS_FreeValue(ctx, exc);
-        }
+        if (JS_IsException(ret))
+            handleException(ctx);
         JS_FreeValue(ctx, ret);
         JS_FreeValue(ctx, evt);
         JS_FreeValue(ctx, device);
@@ -785,11 +781,9 @@ bool dispatchUpdateEvent(double deltaT, void* callback) {
     if (JS_IsFunction(ctx, fn)) {
         JSValue argv[1] = { JS_NewFloat64(ctx, deltaT) };
         JSValue ret = JS_Call(ctx, fn, global, 1, argv);
-        if (JS_IsException(ret)) {
-            JSValue exc = JS_GetException(ctx);
-            js_print_exception(ctx, exc);
-            JS_FreeValue(ctx, exc);
-        } else {
+        if (JS_IsException(ret))
+            handleException(ctx);
+        else {
             int b = JS_ToBool(ctx, ret);
             if (b >= 0) keepRunning = b;
         }
@@ -808,12 +802,8 @@ void dispatchDrawEvent(void* callback) {
     if (JS_IsFunction(ctx, fn)) {
         JSValue argv[1] = { gfx_ns }; // pass gfx namespace as argument
         JSValue ret = JS_Call(ctx, fn, global, 1, argv);
-        if (JS_IsException(ret)) {
-            JSValue exc = JS_GetException(ctx);
-            js_print_exception(ctx, exc);
-            JS_FreeValue(ctx, exc);
-        }
-        //JS_FreeValue(ctx, argv[0]); // do not free static gfx_ns
+        if (JS_IsException(ret))
+            handleException(ctx);
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);

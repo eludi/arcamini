@@ -91,10 +91,13 @@ int main(int argc, char** argv) {
 	gfxInit(winSzX, winSzY, 1, WindowRenderer());
 
 	char* scriptBaseName = ResourceBaseName(scriptName);
-	WindowTitle(scriptBaseName);
-	WindowShowPointer(0);
 	arcmStorageInit("arcalua", scriptBaseName);
+	for(char* pch = scriptBaseName; *pch; ++pch)
+		if(*pch=='_')
+			*pch=' ';
+	WindowTitle(scriptBaseName);
 	free(scriptBaseName);
+	WindowShowPointer(0);
 
 	void* vm = initVM(script, scriptName);
 	free(script);
