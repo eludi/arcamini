@@ -17,7 +17,7 @@ ifeq ($(OS),Linux)
   ifeq ($(ARCH),Linux_armv7l)
     LIBS       += -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -Wl,-rpath,/opt/vc/lib -L/opt/vc/lib -lbcm_host -lpthread -lrt -ldl -lm
   else
-    LIBS       +=  -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -lpthread -ldl -lm
+    LIBS       += -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -lpthread -ldl -lm
   endif
   GLLIBS        = -lGL
   CFLAGS       += -fPIC -no-pie
@@ -30,7 +30,7 @@ else
   else # windows, MinGW
     INCDIR        = -I$(SDL)/include -Iexternal -Iexternal/arcajs
     LIBS          = -Lexternal/$(ARCH) -larcajs \
-                     -L$(SDL)/lib/$(ARCH) -static -lmingw32 -lSDL2main -lSDL2 -Wl,--no-undefined -lm \
+                    -L$(SDL)/lib/$(ARCH) -static -lmingw32 -lSDL2main -lSDL2 -Wl,--no-undefined -lm \
                     -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 \
                     -lshell32 -lsetupapi -lversion -luuid -lwininet -lwsock32 -static-libgcc -mconsole
     EXESUFFIX     = .exe

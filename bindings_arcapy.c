@@ -15,7 +15,6 @@ static bool handleException() {
 		arcmShowError(msg);
 		free(msg);
 	}
-	WindowEmitClose();
 	return false;
 }
 

@@ -175,5 +175,40 @@ void arcmWindowCloseOnButton67(size_t id, uint8_t button, float value) {
 }
 
 void arcmShowError(const char* msg) {
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "arcamini ERROR", msg, NULL);
+	if(!WindowIsOpen()) {
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "arcamini ERROR", msg, NULL);
+		return;
+	}
+	// split long messages into multiple lines
+	char* lines[25];
+	size_t numLines = 0;
+	lines[numLines++] = (char*)msg;
+	for(size_t i=0; i<numLines && numLines<25; ++i) {
+		char* p = strchr(lines[i], '\n');
+		if(p) {
+			*p = 0;
+			if(numLines<24)
+				lines[numLines++] = p+1;
+		}
+	}
+
+	uint32_t bg = ResourceCreateSVGImage("<svg width='240' height='170' version='1.1' xmlns='http://www.w3.org/2000/svg'><path style='fill:#ffffff' d='M 4,151 4,20 C 4,10.5 13,4 21,4 L 221,4 C 229.5,4 236,9 236,21 l 0,130 c 0,8.8 -6.8,15.5 -16,15.5 -14,0.5 -195.5,0 -199,0 -8.4,0 -16.5,-5 -16.3,-15 z M 219.8,20.8 H 21 V 151 H 220 Z M 75.3,133.5 c -2.3,-1.1 -3.5,-3 -3.8,-6.2 -0.4,-3.8 0.5,-5.4 4.7,-9.3 2.8,-2.6 9,-6.5 13.8,-8.9 22.7,-11 47.3,-9.4 68,4.4 9,6 11.3,8.8 11.3,13.3 0,8.7 -7.7,9.9 -17.2,2.6 -9.9,-7.5 -18,-10 -32,-10 -13.6,0 -22,2.6 -31.3,9.7 -7.7,6 -9.7,6.5 -13.7,4.5 z M 65,83 C 61.6,79.3 62.4,73.4 67,69 L 71.2,65 67,60 C 57,49 67.5,38.5 78.6,48.4 l 4.5,4 4.6,-4 c 5.3,-4.7 10,-5.2 13.4,-1.5 3.4,3.8 2.8,8 -1.8,13.3 l -4.2,4.7 4.2,4 c 4.8,4.6 5.3,9.3 1.4,13.3 -3.8,3.8 -6,3.5 -11.9,-1.5 l -5,-4.3 -5,4.3 c -5.4,4.8 -10.5,5.6 -13.9,2.1 z m 74.4,-0.4 c -3.4,-3.8 -2.8,-8 1.7,-13.2 l 4,-4.6 -4,-4.5 c -4.7,-5.2 -5.2,-10 -1.5,-13.4 3.8,-3.4 8,-2.9 13.2,1.7 l 4.5,4 4.6,-4 c 11.2,-9.8 21.4,0.5 11.6,11.7 l -4.2,4.7 4.2,4 c 4.8,4.6 5.5,10 1.6,13.8 -3.8,3.4 -8,2.8 -13,-1.7 l -4.6,-4 -4.5,4 c -5.2,4.6 -10,5 -13.4,1.5 z'/></svg>",
+		WindowWidth()/1280.0f);
+	gfxImageSetCenter(bg,0.5f,0.5f);
+	WindowShowPointer(1);
+	while(WindowIsOpen()) { // show error message until window is closed
+		gfxBeginFrame(0x55002fff);
+		gfxColor(0xffffff22);
+		gfxDrawImage(bg, WindowWidth()/2, WindowHeight()*0.75f, 0.0f, 1.0f, 0);
+		gfxColor(0xffffaaff);
+		gfxFillText(0,12,20, "ERROR");
+		gfxColor(0xddddddff);
+		for(size_t i=0; i<numLines; ++i) {
+			gfxFillText(0,12,60 + i*20, lines[i]);
+		}
+		gfxEndFrame();
+		if(WindowUpdate()!=0)
+			break;
+	}
+	//WindowEmitClose();
 }

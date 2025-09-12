@@ -13,13 +13,16 @@
 extern void* ResourceGetBinary(const char* name, size_t* numBytes);
 
 // --- helper functions ---
-static void js_print_exception(JSContext *ctx, JSValueConst exc) {
+static const char* js_print_exception(JSContext *ctx, JSValueConst exc) {
     if (JS_IsNull(exc) || JS_IsUndefined(exc))
-        return;
+        return NULL;
+    static char errText[4096];
+    size_t pos = 0;
 
     const char *msg = JS_ToCString(ctx, exc);
     if (msg) {
-        fprintf(stderr, "JS exception: %s\n", msg);
+        fprintf(stderr, "--- ERROR ---\n%s\n", msg);
+        pos = snprintf(errText, sizeof(errText), "%s\n\n", msg);
         JS_FreeCString(ctx, msg);
     }
 
@@ -28,16 +31,20 @@ static void js_print_exception(JSContext *ctx, JSValueConst exc) {
     if (!JS_IsUndefined(stack)) {
         const char *s = JS_ToCString(ctx, stack);
         if (s) {
-            fprintf(stderr, "Stack: %s\n", s);
+            fprintf(stderr, "%s\n", s);
+            snprintf(errText + pos, sizeof(errText) - pos, "%s\n", s);
             JS_FreeCString(ctx, s);
         }
     }
     JS_FreeValue(ctx, stack);
+    return errText;
 }
 
 static void handleException(JSContext *ctx) {
     JSValue exc = JS_GetException(ctx);
-    js_print_exception(ctx, exc);
+    const char *msg = js_print_exception(ctx, exc);
+    if(msg)
+        arcmShowError(msg);
     JS_FreeValue(ctx, exc);
     WindowEmitClose();
 }
