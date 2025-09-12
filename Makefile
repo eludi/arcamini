@@ -32,7 +32,7 @@ else
     LIBS          = -Lexternal/$(ARCH) -larcajs \
                     -L$(SDL)/lib/$(ARCH) -static -lmingw32 -lSDL2main -lSDL2 -Wl,--no-undefined -lm \
                     -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 \
-                    -lshell32 -lsetupapi -lversion -luuid -lwininet -lwsock32 -static-libgcc -mconsole
+                    -lshell32 -lsetupapi -lversion -luuid -lwininet -lwsock32 -static-libgcc -mwindows
     EXESUFFIX     = .exe
     RM = del /s
     SEP = \\#
