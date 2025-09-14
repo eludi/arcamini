@@ -8,8 +8,8 @@
 					{ "name":"args", "type":"any", "defaultValue":null },
 					{ "name":"...", "type":"any", "defaultValue":null }
 				],
-				"returnType": "uint32",
-				"description": "breaks if a debugger is attached and passes its argument list to it"
+				"returnType": null,
+				"description": "breaks if a debugger is attached and passes its argument list to it. Passed arguments are available as array args in the debug session."
 			}
 		],
 		"callbacks": [
@@ -20,14 +20,14 @@
 			},
 			{ "function":"input",
 				"parameters": [
-					{ "name":"evt", "type":"string" },
-					{ "name":"device", "type":"int" },
-					{ "name":"id", "type":"int" },
-					{ "name":"value", "type":"float" },
-					{ "name":"value2", "type":"float", "defaultValue":null }
+					{ "name":"evt", "type":"string", "description": "the input event type name. Currently 'button' or 'axis'." },
+					{ "name":"device", "type":"int", "description": "the input device ID. 0 for primary device." },
+					{ "name":"id", "type":"int", "description": "axis or button id, starting with 0" },
+					{ "name":"value", "type":"float", "description": "the input event value, 0.0 or 1.0 for buttons, or a value between -1.0 and 1.0 for axes" },
+					{ "name":"value2", "type":"float", "defaultValue":null, "description": "the second input event value, if applicable. Currently unused." }
 				],
 				"returnType": null,
-				"description": "Called when a user input event occurs"
+				"description": "Called when an input event occurs"
 			},
 			{ "function":"update",
 				"parameters": [
@@ -63,7 +63,7 @@
 				"description": "Returns the current window height in pixels"
 			},
 			{ "function":"color",
-				"parameters": [ { "name":"color", "type":"uint32" } ],
+				"parameters": [ { "name":"color", "type":"uint32", "description": "window background color. Usually a hex value like 0xRRGGBBAA." } ],
 				"returnType": null,
 				"description": "Sets the window background color"
 			}
@@ -75,63 +75,70 @@
 		"functions": [
 			{ "function":"color",
 				"parameters": [
-					{ "name":"color", "type":"uint32" }
+					{ "name":"color", "type":"uint32", "description": "the draw color. Usually a hex value like 0xRRGGBBAA." }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Sets the draw color"
 			},
 			{ "function":"lineWidth",
 				"parameters": [
-					{ "name":"w", "type":"float" }
+					{ "name":"w", "type":"float", "description": "the line width. Default is 1.0 pixels" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Sets the line width for drawLine and drawRect"
 			},
 			{ "function":"fillRect",
 				"parameters": [
-					{ "name":"x", "type":"float" },
-					{ "name":"y", "type":"float" },
-					{ "name":"w", "type":"float" },
-					{ "name":"h", "type":"float" }
+					{ "name":"x", "type":"float", "description": "the horizontal position of the rectangle's upper left corner" },
+					{ "name":"y", "type":"float", "description": "the vertical position of the rectangle's upper left corner" },
+					{ "name":"w", "type":"float", "description": "the width of the rectangle" },
+					{ "name":"h", "type":"float", "description": "the height of the rectangle" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Draws a filled rectangle at position (x,y) with width w and height h"
 			},
 			{ "function":"drawRect",
 				"parameters": [
-					{ "name":"x", "type":"float" },
-					{ "name":"y", "type":"float" },
-					{ "name":"w", "type":"float" },
-					{ "name":"h", "type":"float" }
+					{ "name":"x", "type":"float", "description": "the horizontal position of the rectangle's upper left corner" },
+					{ "name":"y", "type":"float", "description": "the vertical position of the rectangle's upper left corner" },
+					{ "name":"w", "type":"float", "description": "the width of the rectangle" },
+					{ "name":"h", "type":"float", "description": "the height of the rectangle" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Draws the outline of a rectangle at position (x,y) with width w and height h"
 			},
 			{ "function":"drawLine",
 				"parameters": [
-					{ "name":"x0", "type":"float" },
-					{ "name":"y0", "type":"float" },
-					{ "name":"x1", "type":"float" },
-					{ "name":"x2", "type":"float" }
+					{ "name":"x0", "type":"float", "description": "the horizontal position of the line's start point" },
+					{ "name":"y0", "type":"float", "description": "the vertical position of the line's start point" },
+					{ "name":"x1", "type":"float", "description": "the horizontal position of the line's end point" },
+					{ "name":"y1", "type":"float", "description": "the vertical position of the line's end point" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Draws a line from (x0,y0) to (x1,y1)"
 			},
 			{ "function":"drawImage",
 				"parameters": [
-					{ "name":"image", "type":"uint32" },
-					{ "name":"x", "type":"float" },
-					{ "name":"y", "type":"float" },
-					{ "name":"rot", "type":"float", "defaultValue":0.0 },
-					{ "name":"sc", "type":"float", "defaultValue":1.0 },
-					{ "name":"flip", "type":"int", "defaultValue":0 }
+					{ "name":"image", "type":"uint32", "description":"the image resource handle" },
+					{ "name":"x", "type":"float", "description": "the horizontal position of the image" },
+					{ "name":"y", "type":"float", "description": "the vertical position of the image" },
+					{ "name":"rot", "type":"float", "defaultValue":0.0, "description": "the rotation angle of the image" },
+					{ "name":"sc", "type":"float", "defaultValue":1.0, "description": "the scale factor of the image" },
+					{ "name":"flip", "type":"int", "defaultValue":0, "description": "the flip mode of the image. 0 = no flip, 1 = horizontal flip, 2 = vertical flip, 3 = both flip" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Draws an image"
 			},
 			{ "function":"fillText",
 				"parameters": [
-					{ "name":"font", "type":"uint32" },
-					{ "name":"x", "type":"float" },
-					{ "name":"y", "type":"float" },
-					{ "name":"str", "type":"string" },
-					{ "name":"align", "type":"int", "defaultValue":0 }
+					{ "name":"font", "type":"uint32", "description": "the font resource handle. Use 0 for built-in 12x16 font" },
+					{ "name":"x", "type":"float", "description": "the horizontal position of the text" },
+					{ "name":"y", "type":"float", "description": "the vertical position of the text" },
+					{ "name":"str", "type":"string", "description": "the text string to draw" },
+					{ "name":"align", "type":"int", "defaultValue":0, "description": "the text alignment. 0 = left, 1 = center, 2 = right" }
 				],
-				"returnType": null
+				"returnType": null,
+				"description": "Draws filled text"
 			}
 		]
 	},
@@ -141,13 +148,13 @@
 		"functions": [
 			{ "function":"replay",
 				"parameters": [
-					{ "name":"sample", "type":"uint32" },
-					{ "name":"volume", "type":"float", "defaultValue":1.0 },
-					{ "name":"balance", "type":"float", "defaultValue":0.0 },
-					{ "name":"detune", "type":"float", "defaultValue":0.0 }
+					{ "name":"sample", "type":"uint32", "description":"the audio sample resource handle" },
+					{ "name":"volume", "type":"float", "defaultValue":1.0, "description":"the volume level to play the sample at" },
+					{ "name":"balance", "type":"float", "defaultValue":0.0, "description":"the stereo balance of the sample in the range [-1.0, 1.0]" },
+					{ "name":"detune", "type":"float", "defaultValue":0.0, "description":"the detune amount in halftones" }
 				],
 				"returnType": "uint32",
-				"description": "immediately plays a sample identified by its handle"
+				"description": "immediately plays a sample identified by its handle. Returns a voice handle that can be used to manipulate the playback"
 			}
 		]
 	},
@@ -157,77 +164,84 @@
 		"functions": [
 			{ "function":"getImage",
 				"parameters": [
-					{ "name":"name", "type":"string" },
-					{ "name":"scale", "type":"float", "defaultValue":1.0 },
-					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
-					{ "name":"centerY", "type":"float", "defaultValue":0.0 },
-					{ "name":"filtering", "type":"int", "defaultValue":1 }
+					{ "name":"name", "type":"string", "description":"the image file name relative to the app's root directory" },
+					{ "name":"scale", "type":"float", "defaultValue":1.0, "description":"the scale factor of the image. Only relevant for SVG vector images" },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0, "description":"the relative horizontal center position of the image in range [0.0, 1.0]" },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0, "description":"the relative vertical center position of the image in range [0.0, 1.0]" },
+					{ "name":"filtering", "type":"int", "defaultValue":1, "description":"the image filtering mode. 0 = nearest neighbor, 1 = bilinear" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "loads an image from the app's directory. Supported image formats are PNG, JPEG, and SVG. Returns image handle or 0 if the image could not be found or loaded"
 			},
 			{ "function":"createImage",
 				"parameters": [
 					{ "name":"data", "type":"array<uint32>", "description":"image data as array of uint32 RGBA pixels, or as Uint32Array (Javascript only)" },
-					{ "name":"width", "type":"int" },
-					{ "name":"height", "type":"int" },
-					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
-					{ "name":"centerY", "type":"float", "defaultValue":0.0 },
-					{ "name":"filtering", "type":"int", "defaultValue":1 }
+					{ "name":"width", "type":"int", "description":"the image width in pixels" },
+					{ "name":"height", "type":"int", "description":"the image height in pixels" },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0, "description":"the relative horizontal center position of the image in range [0.0, 1.0]" },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0, "description":"the relative vertical center position of the image in range [0.0, 1.0]" },
+					{ "name":"filtering", "type":"int", "defaultValue":1, "description":"the image filtering mode. 0 = nearest neighbor, 1 = bilinear" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "creates an image from raw pixel data. Returns image handle or 0 if the image could not be created"
 			},
 			{ "function":"createSVGImage",
 				"parameters": [
-					{ "name":"svg", "type":"string" },
-					{ "name":"scale", "type":"float", "defaultValue":1.0 },
-					{ "name":"centerX", "type":"float", "defaultValue":0.0 },
-					{ "name":"centerY", "type":"float", "defaultValue":0.0 }
+					{ "name":"svg", "type":"string", "description":"the SVG image data as a string" },
+					{ "name":"scale", "type":"float", "defaultValue":1.0, "description":"the scale factor of the image" },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0, "description":"the relative horizontal center position of the image in range [0.0, 1.0]" },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0, "description":"the relative vertical center position of the image in range [0.0, 1.0]" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "creates an SVG image from an SVG string. Returns image handle or 0 if the image could not be created"
 			},
 			{ "function":"getTileGrid",
 				"parameters": [
-					{ "name":"image", "type":"uint32" },
-					{ "name":"tilesX", "type":"int" },
-					{ "name":"tilesY", "type":"int", "defaultValue":1 },
-					{ "name":"borderW", "type":"int", "defaultValue":0 }
+					{ "name":"image", "type":"uint32", "description":"the handle of the parent image" },
+					{ "name":"tilesX", "type":"int", "description":"the number of tiles in horizontal direction" },
+					{ "name":"tilesY", "type":"int", "defaultValue":1, "description":"the number of tiles in vertical direction" },
+					{ "name":"borderW", "type":"int", "defaultValue":0, "description":"the width of the border around tiles in pixels" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "creates multiple tile images an existing image. The image is divided into tilesX x tilesY tiles, optionally with a border of borderW pixels between the tiles. Returns handle of the first tile or 0 if the tile images could not be created."
 			},
 			{ "function":"getAudio",
 				"parameters": [
-					{ "name":"name", "type":"string" }
+					{ "name":"name", "type":"string", "description":"the audio file name relative to the app's root directory" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "loads an audio sample from the app's directory. Returns audio sample handle or 0 if the sample could not be found or loaded"
 			},
 			{ "function":"createAudio",
 				"parameters": [
 					{ "name":"data", "type":"array<float>", "description":"PCM audio samples either passed as array of floats [-1.0, 1.0], or as Float32Array (Javascript only)" },
-					{ "name":"numChannels", "type":"int", "defaultValue":1 }
+					{ "name":"numChannels", "type":"int", "defaultValue":1, "description":"the number of audio channels (1 = mono, 2 = stereo)" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "creates an audio sample from raw PCM data. Returns audio sample handle or 0 if the sample could not be created"
 			},
 			{ "function":"getFont",
 				"parameters": [
-					{ "name":"name", "type":"string" },
-					{ "name":"fontSize", "type":"uint32", "defaultValue":16 }
+					{ "name":"name", "type":"string", "description":"the font file name" },
+					{ "name":"fontSize", "type":"uint32", "defaultValue":16, "description":"the font size" }
 				],
-				"returnType": "uint32"
+				"returnType": "uint32",
+				"description": "loads a font from the app's directory at the specified size. Supported font formats are TTF or image formats. In the latter case, it is assumed that the image contains a grid of 16x16 glyphs. Returns font handle or 0 if the font could not be found or loaded."
 			},
 			{ "function":"setStorageItem",
 				"parameters": [
-					{ "name":"key", "type":"string" },
-					{ "name":"value", "type":"string" }
+					{ "name":"key", "type":"string", "description":"the key name" },
+					{ "name":"value", "type":"string", "description":"the value to store" }
 				],
 				"returnType": null,
 				"description": "sets a value in an app-specific persistent key-value store"
 			},
 			{ "function":"getStorageItem",
 				"parameters": [
-					{ "name":"key", "type":"string" }
+					{ "name":"key", "type":"string", "description":"the key name" }
 				],
 				"returnType": "string",
-				"description": "retrieves a value from an app-specific persistent key-value store. Returns NULL if the key does not exist"
+				"description": "retrieves a value from an app-specific persistent key-value store. Returns null if the key does not exist."
 			}
 		]
 	}
