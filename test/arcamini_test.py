@@ -1,9 +1,13 @@
-import resource, window, audio
+import resource, window, audio, math
 
-# Callback functions in global namespace
 img = resource.getImage("test.png")
 font = resource.getFont("Viafont.ttf", 32)
-sample = resource.getAudio("beep.wav")
+sample = resource.getAudio("ding.wav")
+def createBeep(freq, dur, vol=1.0):
+    return resource.createAudio([math.sin(2 * math.pi * freq * n / 44100) * vol
+        for n in range(int(44100 * dur))])
+tone880 = createBeep(880, 1.0)
+
 resource.setStorageItem("key", "value")
 val = resource.getStorageItem("key")
 print("Storage value:", val)
@@ -13,9 +17,11 @@ frame = 0
 # window module
 def load():
     print("load called")
-    audio.replay(sample)
     print("window dimensions:", window.width(), window.height())
     window.color(0x000055ff)
+    audio.replay(sample, 1, 0.5)
+    track = audio.replay(tone880, 0.5, -0.5)
+    audio.volume(track, 0.0, 1.0) # fade out over 1 second
 
 def input(evt, device, id, value, value2):
     print(f"input({evt}, {device}, {id}, {value}, {value2})")

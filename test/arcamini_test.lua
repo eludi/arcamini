@@ -1,17 +1,29 @@
 img = resource.getImage("test.png")
 font = resource.getFont("Viafont.ttf", 32)
-sample = resource.getAudio("beep.wav")
+sample = resource.getAudio("ding.wav")
+function createBeep(freq, dur, vol)
+    vol = vol or 1.0
+    local data = {}
+    for n = 0, math.floor(44100 * dur) - 1 do
+        data[n+1] = math.sin(2 * math.pi * freq * n / 44100) * vol
+    end
+    return resource.createAudio(data)
+end
+tone880 = createBeep(880, 1.0)
+
 resource.setStorageItem("key", "value")
 local val = resource.getStorageItem("key")
 print("Storage value:", val)
 
-local frame = 0
+frame = 0
 
 function load()
     print("load called")
-    audio.replay(sample)
     print("window dimensions:", window.width(), window.height())
     window.color(0x000055ff)
+    audio.replay(sample, 1, 0.5)
+    local track = audio.replay(tone880, 0.5, -0.5)
+    audio.volume(track, 0.0, 1.0) -- fade out over 1 second
 end
 
 function input(evt, device, id, value, value2)

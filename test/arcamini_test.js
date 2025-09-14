@@ -1,7 +1,15 @@
-
 let img = resource.getImage("test.png");
 let font = resource.getFont("Viafont.ttf", 32);
-let sample = resource.getAudio("beep.wav");
+let sample = resource.getAudio("ding.wav");
+function createBeep(freq, dur, vol = 1.0) {
+    let data = [];
+    for (let n = 0; n < Math.floor(44100 * dur); n++) {
+        data.push(Math.sin(2 * Math.PI * freq * n / 44100) * vol);
+    }
+    return resource.createAudio(data);
+}
+let tone880 = createBeep(880, 1.0);
+
 resource.setStorageItem("key", "value");
 let val = resource.getStorageItem("key");
 console.log("Storage value:", val);
@@ -10,9 +18,11 @@ let frame = 0;
 
 function load() {
     console.log("load called");
-    audio.replay(sample);
     console.log("window dimensions:", window.width(), window.height());
     window.color(0x000055ff);
+    audio.replay(sample, 1, 0.5);
+    let track = audio.replay(tone880, 0.5, -0.5);
+    audio.volume(track, 0.0, 1.0); // fade out over 1 second
 }
 
 function input(evt, device, id, value, value2) {

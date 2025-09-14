@@ -25,7 +25,7 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 
 ## Examples
 
-- [Falling blocks](./falling_blocks/) - a mini game in just about 60 lines of code
+- [mini games](./minigames/) - Falling Blocks, Flappy Box, each in just about 40-60 lines of code
 - [Render performance test](./perf/)
 - [BALLATTAX](./ballattax/) game
 - [Functional tests](./test/)
