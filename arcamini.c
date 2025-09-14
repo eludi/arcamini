@@ -3,6 +3,7 @@
 #include "graphics.h"
 #include "resources.h"
 #include "value.h"
+#include "audio.h"
 #include "window.h"
 #include "SDL.h"
 
@@ -10,6 +11,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
+void arcmAudioVolume(uint32_t track, float volume, float fadeTime) {
+	if(fadeTime <= 0.0f) {
+		if(volume>0.0f)
+			AudioAdjustVolume(track, volume);
+		else
+			AudioStop(track);
+	} else if(volume<=0.0f)
+		AudioFadeOut(track, fadeTime);
+	else // incomplete: fade in not implemented yet
+		AudioAdjustVolume(track, volume);
+}
 
 //--- Resource -----------------------------------------------------
 uint32_t arcmResourceGetImage(const char* name, float scale, float centerX, float centerY, int filtering) {

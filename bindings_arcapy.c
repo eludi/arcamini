@@ -155,6 +155,20 @@ static bool py_AudioReplay(int argc, py_StackRef argv) {
 	return true;
 }
 
+static bool py_AudioVolume(int argc, py_StackRef argv) {
+	int64_t track;
+	float volume, fadeTime = 0.0f;
+	if(!py_castint(py_arg(0), &track) ||
+	   !py_castfloat32(py_arg(1), &volume))
+		return false;
+	if(argc > 2 && !py_castfloat32(py_arg(2), &fadeTime))
+		return false;
+
+	arcmAudioVolume((uint32_t)track, volume, fadeTime);
+	py_newnone(py_retval());
+	return true;
+}
+
 // --- resource bindings ---
 static bool py_ResourceGetImage(int argc, py_StackRef argv) {
 	const char* name = py_tostr(py_arg(0));
@@ -332,6 +346,7 @@ static void bindArcamini() {
 	// audio namespace
 	py_GlobalRef audio_ns = py_newmodule("audio");
 	py_bindfunc(audio_ns, "replay", py_AudioReplay);
+	py_bindfunc(audio_ns, "volume", py_AudioVolume);
 
 	// resource namespace
 	py_GlobalRef resource_ns = py_newmodule("resource");

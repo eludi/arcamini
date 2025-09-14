@@ -415,15 +415,27 @@ static JSValue js_AudioReplay(JSContext *ctx, JSValueConst this_val,
         JS_ToFloat64Default(ctx, &vol, argv[1], 1.0) ||
         JS_ToFloat64Default(ctx, &bal, argv[2], 0.0) ||
         JS_ToFloat64Default(ctx, &det, argv[3], 0.0))
-        return JS_ThrowTypeError(ctx, "Audio.replay expects (uint32[, number, number, number])");
+        return JS_ThrowTypeError(ctx, "audio.replay expects (uint32[, number, number, number])");
     uint32_t track = AudioReplay(sample,(float)vol,(float)bal,(float)det);
     if (track == UINT_MAX)
         return JS_UNDEFINED; // signify invalid
     return JS_NewUint32(ctx, track);
 }
 
+static JSValue js_AudioVolume(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv) {
+    uint32_t track; double vol, fadeTime;
+    if (JS_ToUint32(ctx, &track, argv[0]) ||
+        JS_ToFloat64(ctx, &vol, argv[1]) ||
+        JS_ToFloat64Default(ctx, &fadeTime, argv[2], 0.0))
+        return JS_ThrowTypeError(ctx, "audio.volume expects (uint32, number[, number])");
+    arcmAudioVolume(track,(float)vol,(float)fadeTime);
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_Audio_funcs[] = {
     JS_CFUNC_DEF("replay", 4, js_AudioReplay),
+    JS_CFUNC_DEF("volume", 3, js_AudioVolume),
 };
 
 

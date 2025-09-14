@@ -38,6 +38,8 @@ extern void gfxFillTextAlign(uint32_t font, float x, float y, const char* str, i
 /** \note For stereo samples, detune and balance must be 0.0f
  * \return track number playing this sound or UINT_MAX if the input is invalid or no track is available */
 extern uint32_t AudioReplay(uint32_t sample, float volume, float balance, float detune);
+/// sets the volume level of a currently playing track
+extern void arcmAudioVolume(uint32_t track, float volume, float fadeTime);
 ///@}
 
 ///@{ \module resource

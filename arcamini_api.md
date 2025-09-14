@@ -117,7 +117,7 @@ Draws filled text
 
 audio playback functions
 ### function replay
-immediately plays a sample identified by its handle. Returns a voice handle that can be used to manipulate the playback
+immediately plays a sample identified by its handle. Returns a track handle that can be used to manipulate the playback
 #### Parameters:
 - {uint32} sample - the audio sample resource handle
 - {float} volume (default: 1.0) - the volume level to play the sample at
@@ -126,6 +126,13 @@ immediately plays a sample identified by its handle. Returns a voice handle that
 
 #### Returns:
 - {uint32}
+
+### function volume
+sets the volume level of a currently playing track. Set to 0.0 to stop the track.
+#### Parameters:
+- {uint32} track - the track handle returned by the replay function
+- {float} volume - the new volume level for the track in the range [0.0, 1.0]
+- {float} fadeTime (default: 0.0) - the time in seconds to fade to 0. Other volume levels are not supported yet.
 
 ## module resource
 

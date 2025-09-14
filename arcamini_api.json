@@ -154,7 +154,16 @@
 					{ "name":"detune", "type":"float", "defaultValue":0.0, "description":"the detune amount in halftones" }
 				],
 				"returnType": "uint32",
-				"description": "immediately plays a sample identified by its handle. Returns a voice handle that can be used to manipulate the playback"
+				"description": "immediately plays a sample identified by its handle. Returns a track handle that can be used to manipulate the playback"
+			},
+			{ "function":"volume",
+				"parameters": [
+					{ "name":"track", "type":"uint32", "description":"the track handle returned by the replay function" },
+					{ "name":"volume", "type":"float", "description":"the new volume level for the track in the range [0.0, 1.0]" },
+					{ "name":"fadeTime", "type":"float", "defaultValue":0.0, "description":"the time in seconds to fade to 0. Other volume levels are not supported yet." }
+				],
+				"returnType": null,
+				"description": "sets the volume level of a currently playing track. Set to 0.0 to stop the track."
 			}
 		]
 	},

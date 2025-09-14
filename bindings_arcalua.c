@@ -269,8 +269,17 @@ static int lua_AudioReplay(lua_State *L) {
     return 1;
 }
 
+static int lua_AudioVolume(lua_State *L) {
+    uint32_t track = (uint32_t)luaL_checkinteger(L, 1);
+    float volume = (float)luaL_checknumber(L, 2);
+    float fadeTime = (float)luaL_optnumber(L, 3, 0.0f);
+    arcmAudioVolume(track, volume, fadeTime);
+    return 0;
+}
+
 static const luaL_Reg audio_funcs[] = {
     {"replay", lua_AudioReplay},
+    {"volume", lua_AudioVolume},
     {NULL, NULL}
 };
 
