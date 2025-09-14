@@ -3,7 +3,7 @@ import random, math, window, resource, audio
 winSzX, winSzY, sc = window.width(), window.height(), window.height()/480
 player, pipes, score, state = {"y":0,"vy":0}, [], 0, "play"
 notes = [resource.createAudio([math.sin(2*math.pi*f*n/44100)
-          for n in range(2000)]) for f in (220,440,554,659,880)]
+    for n in range(8000 if f==220 else 2000)]) for f in (220,440,554,659,880)]
 
 def load():
     global player, pipes, score, state
@@ -17,15 +17,15 @@ def input(evt,dev,id,val,v2=None):
 def update(dt):
     global score, state
     if state!="play": return True
-    player["vy"]+=600*dt*sc; player["y"]+=player["vy"]*dt
-    if not pipes or pipes[-1][0]<winSzX-200*sc:
-        gap=random.randint(int(100*sc),winSzY-int(100*sc)); pipes.append([winSzX,gap])
+    player["vy"] += 600*dt*sc; player["y"] += player["vy"]*dt
+    if not pipes or pipes[-1][0] < winSzX-200*sc:
+        gap = random.randint(int(100*sc), winSzY-int(100*sc)); pipes.append([winSzX,gap])
     for p in list(pipes):
-        p[0]-=150*dt*sc
-        if p[0]+40*sc<0: pipes.remove(p); audio.replay(notes[1+score%(len(notes)-1)], 0.5); score+=1
-        if (20*sc<p[0]<80*sc) and not(p[1]-60*sc<player["y"]<p[1]+30*sc):
+        p[0] -= 150*dt*sc
+        if p[0]+40*sc < 0: pipes.remove(p); audio.replay(notes[1+score%(len(notes)-1)], 0.5); score+=1
+        if (20*sc < p[0] < 80*sc) and not(p[1]-60*sc < player["y"] < p[1]+30*sc):
             state="over"; audio.replay(notes[0])
-    if player["y"]<0 or player["y"]>winSzY-30*sc: state="over"; audio.replay(notes[0])
+    if player["y"] < 0 or player["y"] > winSzY-30*sc: state="over"; audio.replay(notes[0])
     return True
 
 def draw(g):
