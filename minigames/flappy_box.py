@@ -32,6 +32,6 @@ def draw(g):
     g.color(0x00ff00ff); g.fillRect(50*sc,player["y"],30*sc,30*sc)
     g.color(0xff0000ff)
     for p in pipes:
-        g.fillRect(p[0],0,40*sc,p[1]-60*sc); g.fillRect(p[0],p[1]+60*sc,40*sc,winSzY)
+        g.fillRect(p[0],0,40*sc,p[1]-60*sc); g.fillRect(p[0],p[1]+60*sc,40*sc,winSzY-p[1]-60*sc)
     g.color(0xffffffff); g.fillText(0,10*sc,20*sc,f"Score:{score}")
     if state=="over": g.fillText(0,winSzX//2,winSzY//2,"GAME OVER",1)

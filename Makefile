@@ -1,5 +1,5 @@
 CC     = gcc
-CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG
+CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG -DPK_ENABLE_OS=0
 
 SDL = ../SDL2
 
@@ -47,7 +47,7 @@ SRCQJS = arcaqjs.c bindings_arcaqjs.c arcamini.c
 OBJQJS = $(SRCQJS:.c=.o)
 EXEQJS = arcaqjs$(EXESUFFIX)
 
-SRCLUA = arcalua.c external/minilua.h bindings_arcalua.c arcamini.c
+SRCLUA = arcalua.c bindings_arcalua.c arcamini.c
 OBJLUA = $(SRCLUA:.c=.o)
 EXELUA = arcalua$(EXESUFFIX)
 
