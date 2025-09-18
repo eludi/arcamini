@@ -13,10 +13,17 @@
 			}
 		],
 		"callbacks": [
-			{ "function":"load",
+			{ "function":"startup",
 				"parameters": [ ],
 				"returnType": null,
 				"description": "Called after the script has been loaded before entering the main loop"
+			},
+			{ "function":"enter",
+				"parameters": [ 
+					{ "name":"args", "type":"array<string>", "description": "the arguments passed to switchScene() or as command line parameters after the script name if the scene was loaded at startup" }
+				],
+				"returnType": null,
+				"description": "Called when entering a scene, either after startup or after a call to switchScene()"
 			},
 			{ "function":"input",
 				"parameters": [
@@ -41,10 +48,15 @@
 				"returnType": null,
 				"description": "Called to render a frame after update"
 			},
-			{ "function":"unload",
+			{ "function":"leave",
 				"parameters": [ ],
 				"returnType": null,
-				"description": "Called before the script is unloaded after exiting the main loop. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together."
+				"description": "Called when leaving a scene before switching to another scene or shutting down the application"
+			},
+			{ "function":"shutdown",
+				"parameters": [ ],
+				"returnType": null,
+				"description": "Called after exiting the main loop before shutting down. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together."
 			}
 		]
 	},
@@ -66,6 +78,15 @@
 				"parameters": [ { "name":"color", "type":"uint32", "description": "window background color. Usually a hex value like 0xRRGGBBAA." } ],
 				"returnType": null,
 				"description": "Sets the window background color"
+			},
+			{ "function":"switchScene",
+				"parameters": [
+					{ "name":"script", "type":"string", "description": "the file name of the script that takes over the event handling" },
+					{ "name":"args", "type":"any", "defaultValue":null, "description": "the argument to be passed to the new script. Will be converted to string." },
+					{ "name":"...", "type":"any", "defaultValue":null, "description": "optional additional arguments to be passed to the new script" }
+				],
+				"returnType": null,
+				"description": "Switches to another script as event handler. Calls leave() on the current scene before switching and enter(args) on the new scene. This is useful for organizing an app/game in separate scenes or screens."
 			}
 		]
 	},

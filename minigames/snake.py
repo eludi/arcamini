@@ -6,7 +6,7 @@ snake, food, dir, score, state, delay = [], (0,0), (1,0), 0, "play", 0
 beep = resource.createAudio([0.3*math.sin(2*math.pi*660*n/44100) for n in range(2000)])
 moop = resource.createAudio([math.sin(2*math.pi*220*n/44100) for n in range(10000)])
 
-def load():
+def startup():
     global snake, dir, score, state, delay
     snake=[((winX//2//grid)*grid, (winY//2//grid)*grid)]
     dir=(1,0); score=0; state="play"; delay=0; newFood()
@@ -17,7 +17,7 @@ def newFood():
 
 def input(evt,dev,id,val,v2):
     global dir, state
-    if state=="over" and evt=="button" and val>0: load()
+    if state=="over" and evt=="button" and val>0: startup()
     if evt=="axis" and abs(val)>0.5:
         dir = (int(val),0) if id%2 == 0 else (0,int(val))
 

@@ -3,9 +3,9 @@ import random, window
 def erroneous():
     raise RuntimeError("This is an error for testing purposes.")
 
-def load():
+def startup():
     window.color(0x0055aaff)
-    print("load")
+    print("startup")
     if random.random() < 0.5:
         erroneous()
 

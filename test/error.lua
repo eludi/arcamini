@@ -2,9 +2,9 @@ local function erroneous()
 	error('This is an error for testing purposes.')
 end
 
-function load()
+function startup()
 	window.color(0x0055aaff)
-	print('load')
+	print('startup')
 	if math.random() < 0.5 then
 		erroneous()
 	end

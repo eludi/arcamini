@@ -34,28 +34,32 @@ int main(int argc, char** argv) {
 	int winSzX = 640, winSzY = 480, windowFlags = WINDOW_VSYNC;
 	char* archiveName = NULL;
 	int debug_port = 0;
-	if(argc<2 || strcmp(ResourceSuffix(argv[argc-1]),"py")!=0) {
-		fprintf(stderr, "usage: %s [-w width] [-h height] [-f(ullscreen)] [-d debug_port] script.py\n", argv[0]);
-		return 99;
-	}
-	for(int i=1; i<argc-1; ++i) {
-		if(strcmp(argv[i],"-f")==0)
+	const char* usage = "usage: %s [-w width] [-h height] [-f(ullscreen)] [-d debug_port] script.py [arg1, arg2, ...]\n";
+	int argn;
+	for(argn=1; argn<argc-1; ++argn) {
+		if(strcmp(argv[argn],"-f")==0)
 			windowFlags |= WINDOW_FULLSCREEN;
-		else if(strcmp(argv[i],"-w")==0 && i+1<argc-1)
-			winSzX = atoi(argv[++i]);
-		else if(strcmp(argv[i],"-h")==0 && i+1<argc-1)
-			winSzY = atoi(argv[++i]);
-		else if(strcmp(argv[i],"-d")==0 && i+1<argc-1) {
-			debug_port = atoi(argv[++i]);
+		else if(strcmp(argv[argn],"-w")==0 && argn+1<argc-1)
+			winSzX = atoi(argv[++argn]);
+		else if(strcmp(argv[argn],"-h")==0 && argn+1<argc-1)
+			winSzY = atoi(argv[++argn]);
+		else if(strcmp(argv[argn],"-d")==0 && argn+1<argc-1) {
+			debug_port = atoi(argv[++argn]);
 			debug = 1;
 		}
-		else if(argv[i][0] == '-') {
-			fprintf(stderr, "Unknown option: %s\n", argv[i]);
+		else if(argv[argn][0] == '-') {
+			fprintf(stderr, "Unknown option: %s\n", argv[argn]);
 			return 99;
 		}
+		else break;
 	}
 
-	char* scriptName = argv[argc-1];
+	char* scriptName = argn < argc ? argv[argn] : NULL;
+	if(!scriptName || strcmp(ResourceSuffix(scriptName),"py")!=0) {
+		fprintf(stderr, usage, argv[0]);
+		return 99;
+	}
+
 	size_t pos = strlen(scriptName)-1;
 	while(pos>0) {
 		if(scriptName[pos]==PATHSEP)
@@ -111,7 +115,8 @@ int main(int argc, char** argv) {
 		WindowControllerOpen(i, 0);
 	WindowEventHandler(arcmDispatchInputEvents, vm);
 
-	if(dispatchLifecycleEvent("load", vm)) {
+	if(dispatchLifecycleEvent("startup", vm)) {
+		dispatchLifecycleEventArgv("enter", argc-argn-1, argv+argn+1, vm);
 		while(WindowIsOpen()) {
 			if (debug_port > 0)
 				pkpy_debug_poll();
@@ -125,7 +130,8 @@ int main(int argc, char** argv) {
 			if(WindowUpdate()!=0)
 				break;
 		}
-		dispatchLifecycleEvent("unload", vm);
+		dispatchLifecycleEvent("leave", vm);
+		dispatchLifecycleEvent("shutdown", vm);
 	}
 
 	if(debug) {

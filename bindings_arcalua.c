@@ -1,4 +1,5 @@
 #include "arcamini.h"
+#include "bindings.h"
 #define LUA_IMPL
 #include "minilua.h"
 
@@ -40,10 +41,44 @@ static int lua_WindowClearColor(lua_State *L) {
     return 0;
 }
 
+static int lua_WindowSwitchScene(lua_State *L) {
+    const char* fname = luaL_checkstring(L, 1);
+    int argc = lua_gettop(L);
+	const char** args = argc>1 ? (const char**)malloc((argc-1) * sizeof(char*)) : NULL;
+	for(int i=1; i<argc; ++i) {
+		args[i-1] = lua_tostring(L, i+1);
+	}
+
+	char* script = ResourceGetText(fname);
+	if(!script)
+		return luaL_error(L, "window.switchScene(%s): file not found", fname);
+
+	// call leave event on current script
+	dispatchLifecycleEvent("leave", L);
+	// clear current global callbacks
+    lua_pushnil(L); lua_setglobal(L, "enter");
+    lua_pushnil(L); lua_setglobal(L, "input");
+    lua_pushnil(L); lua_setglobal(L, "update");
+    lua_pushnil(L); lua_setglobal(L, "draw");
+    lua_pushnil(L); lua_setglobal(L, "leave");
+
+    bool ok = luaL_loadbuffer(L, script, strlen(script), fname) == LUA_OK && lua_pcall(L, 0, 0, 0) == LUA_OK;
+    free(script);
+    if(!ok) {
+        free(args);
+        return luaL_error(L, "window.switchScene(%s) error: %s", fname, lua_tostring(L, -1));
+    }
+
+	dispatchLifecycleEventArgv("enter", argc-1, (char**)args, L);
+	free(args);
+    return 0;
+}
+
 static const luaL_Reg window_funcs[] = {
     {"width", lua_WindowWidth},
     {"height", lua_WindowHeight},
     {"color", lua_WindowClearColor},
+    {"switchScene", lua_WindowSwitchScene},
     {NULL, NULL}
 };
 
@@ -341,6 +376,24 @@ bool dispatchLifecycleEvent(const char* evtName, void* udata) {
     lua_State* L = (lua_State*)udata;
 
     if(lua_getglobal(L, evtName) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0) != LUA_OK) {
+        handleException(L);
+        return false;
+    }
+    return true;
+}
+
+bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void* udata) {
+    lua_State* L = (lua_State*)udata;
+
+    if(lua_getglobal(L, evtName) != LUA_TFUNCTION)
+        return true;
+
+    lua_newtable(L);
+    for (int i = 0; i < argc; ++i) {
+        lua_pushstring(L, argv[i]);
+        lua_seti(L, -2, i + 1);
+    }
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
         handleException(L);
         return false;
     }

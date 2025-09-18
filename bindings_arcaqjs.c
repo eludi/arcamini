@@ -305,11 +305,75 @@ static JSValue js_WindowClearColor(JSContext *ctx, JSValueConst this_val, int ar
     return JS_UNDEFINED;
 }
 
+// --- window.switchScene binding ---
+static JSValue js_WindowSwitchScene(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    const char *fname = argc ? JS_ToCString(ctx, argv[0]) : NULL;
+    if (!fname)
+        return JS_ThrowTypeError(ctx, "window.switchScene: invalid or missing filename");
+
+    // Collect additional arguments
+    int numArgs = argc - 1;
+    char **args = NULL;
+    if (numArgs > 0) {
+        args = (char **)malloc(numArgs * sizeof(char *));
+        for (int i = 0; i < numArgs; ++i) {
+            const char *argStr = JS_ToCString(ctx, argv[i+1]);
+            if (!argStr) {
+                JS_FreeCString(ctx, fname);
+                for (int j = 0; j < i; ++j) free(args[j]);
+                free(args);
+                return JS_ThrowTypeError(ctx, "window.switchScene: invalid argument");
+            }
+            args[i] = strdup(argStr);
+            JS_FreeCString(ctx, argStr);
+        }
+    }
+
+    // Call leave event on current script
+    dispatchLifecycleEvent("leave", ctx);
+    // Clear current callbacks:
+    JSValue global = JS_GetGlobalObject(ctx);
+    JS_SetPropertyStr(ctx, global, "enter", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, global, "input", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, global, "update", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, global, "draw", JS_UNDEFINED);
+    JS_SetPropertyStr(ctx, global, "leave", JS_UNDEFINED);
+    JS_FreeValue(ctx, global);
+
+    // Load new script
+    char *script = (char *)ResourceGetText(fname);
+    if (!script) {
+        JS_FreeCString(ctx, fname);
+        if (args) {
+            for (int i = 0; i < numArgs; ++i) free(args[i]);
+            free(args);
+        }
+        return JS_ThrowReferenceError(ctx, "window.switchScene: file not found");
+    }
+
+    // Evaluate new script
+    JSValue ret = JS_Eval(ctx, script, strlen(script), fname, JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
+    free(script);
+
+    JS_FreeCString(ctx, fname);
+    if (JS_IsException(ret)) {
+        handleException(ctx);
+        JS_FreeValue(ctx, ret);
+    }
+    else dispatchLifecycleEventArgv("enter", numArgs, args, ctx); // Dispatch enter event with arguments
+    if (args) {
+        for (int i = 0; i < numArgs; ++i) free(args[i]);
+        free(args);
+    }
+    return JS_UNDEFINED;
+}
+
 static const JSCFunctionListEntry js_Window_funcs[] = {
     JS_CFUNC_DEF("title", 1, js_WindowTitle),
     JS_CFUNC_DEF("width", 0, js_WindowWidth),
     JS_CFUNC_DEF("height", 0, js_WindowHeight),
     JS_CFUNC_DEF("color", 1, js_WindowClearColor),
+    JS_CFUNC_DEF("switchScene", 1, js_WindowSwitchScene),
 };
 
 
@@ -737,6 +801,29 @@ bool dispatchLifecycleEvent(const char* evtName, void* callback) {
             ok = false;
         }
         JS_FreeValue(ctx, ret);
+    }
+    JS_FreeValue(ctx, fn);
+    JS_FreeValue(ctx, global);
+    return ok;
+}
+
+bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void* callback) {
+    JSContext *ctx = (JSContext*)callback;
+    JSValue global = JS_GetGlobalObject(ctx);
+    JSValue fn = JS_GetPropertyStr(ctx, global, evtName);
+    bool ok = true;
+    if (JS_IsFunction(ctx, fn)) {
+        JSValue args_array = JS_NewArray(ctx);
+        for (int i = 0; i < argc; ++i)
+            JS_SetPropertyUint32(ctx, args_array, i, JS_NewString(ctx, argv[i]));
+        JSValue argv[1] = { args_array };
+        JSValue ret = JS_Call(ctx, fn, global, 1, argv);
+        if (JS_IsException(ret)) {
+            handleException(ctx);
+            ok = false;
+        }
+        JS_FreeValue(ctx, ret);
+        JS_FreeValue(ctx, args_array);
     }
     JS_FreeValue(ctx, fn);
     JS_FreeValue(ctx, global);

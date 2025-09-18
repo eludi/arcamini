@@ -9,7 +9,7 @@ inputs = [
     {'axes': [0, 0], 'buttons': [0, 0, 0, 0, 0, 0, 0, 0]}
 ]
 
-def load(args=None):
+def startup(args=None):
     window.color(0x000000FF)  # Set background color
     switchScene(Menu(), args or {})
 

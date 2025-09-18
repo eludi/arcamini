@@ -18,13 +18,13 @@ for _, f in ipairs({440, 494, 554, 659, 740, 880}) do
     table.insert(notes, beep(f, 0.05, 0.2))
 end
 
-function load()
+function startup()
     window.color(0x202020ff)
     local h = resource.getStorageItem("highscore")
     highscore = h and tonumber(h) or 0
 end
 
-function unload()
+function shutdown()
     if score > highscore then highscore = score end
     resource.setStorageItem("highscore", tostring(highscore))
 end

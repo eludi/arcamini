@@ -9,8 +9,13 @@ breaks if a debugger is attached and passes its argument list to it. Passed argu
 - {any} args
 - {any} ...
 
-### callback function load
+### callback function startup
 Called after the script has been loaded before entering the main loop
+
+### callback function enter
+Called when entering a scene, either after startup or after a call to switchScene()
+#### Parameters:
+- {array<string>} args - the arguments passed to switchScene() or as command line parameters after the script name if the scene was loaded at startup
 
 ### callback function input
 Called when an input event occurs
@@ -34,8 +39,11 @@ Called to render a frame after update
 #### Parameters:
 - {gfx} gfx - the graphics context to call draw functions on
 
-### callback function unload
-Called before the script is unloaded after exiting the main loop. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together.
+### callback function leave
+Called when leaving a scene before switching to another scene or shutting down the application
+
+### callback function shutdown
+Called after exiting the main loop before shutting down. The main loop can be exited by returning false from update(), by closing the application window, or by pressing buttons 6 and 7 together.
 
 ## module window
 
@@ -56,6 +64,13 @@ Returns the current window height in pixels
 Sets the window background color
 #### Parameters:
 - {uint32} color - window background color. Usually a hex value like 0xRRGGBBAA.
+
+### function switchScene
+Switches to another script as event handler. Calls leave() on the current scene before switching and enter(args) on the new scene. This is useful for organizing an app/game in separate scenes or screens.
+#### Parameters:
+- {string} script - the file name of the script that takes over the event handling
+- {any} args - the argument to be passed to the new script. Will be converted to string.
+- {any} ... - optional additional arguments to be passed to the new script
 
 ## module gfx
 

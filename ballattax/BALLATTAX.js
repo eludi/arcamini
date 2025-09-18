@@ -20,12 +20,12 @@ function switchScene(newScene, args) {
 }
 
 // Lifecycle callbacks
-function load(args = {}) {
+function startup(args = {}) {
     window.color(0x000000FF); // Set background color
     switchScene(require(args.scene || 'menu.js'), args);
 }
 
-function input(evt,device,id,value,value2) {
+function input(evt, device, id, value, value2) {
     // update inputs state, evt describes a state change:
     while (device >= inputs.length) {
         inputs.push({ axes: [0, 0], buttons: [0, 0, 0, 0, 0, 0, 0, 0] });

@@ -125,6 +125,7 @@ int arcmDispatchInputEvents(void* callback) {
 				case SDLK_RIGHT: dispatchAxisEvent(numControllers+0, 0, +1.0f, callback); break;
 				case SDLK_UP: dispatchAxisEvent(numControllers+0, 1, -1.0f, callback); break;
 				case SDLK_DOWN: dispatchAxisEvent(numControllers+0, 1, 1.0f, callback); break;
+				case ' ':
 				case SDLK_RETURN: dispatchButtonEvent(numControllers+0, 0, 1.0f, callback); break;
 				case SDLK_BACKSPACE: dispatchButtonEvent(numControllers+0, 1, 1.0f, callback); break;
 				case SDLK_RALT: dispatchButtonEvent(numControllers+0, 2, 1.0f, callback); break;

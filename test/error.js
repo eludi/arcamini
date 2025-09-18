@@ -2,9 +2,9 @@ function erroneous() {
     throw new Error('This is an error for testing purposes.');
 }
 
-function load() {
+function startup() {
     window.color(0x0055aaff);
-    console.log('load');
+    console.log('startup');
     if (Math.random() < 0.5) {
         erroneous();
     }

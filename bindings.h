@@ -18,8 +18,9 @@ extern void* initVM(const char* script, const char* scriptName);
 /// @param state  vm handle returned by initVM
 extern void shutdownVM(void* vm);
 
-/// dispatch main loop events to handlers if they exist
+/// dispatch main loop events to handler functions, if they exist
 bool dispatchLifecycleEvent(const char* evtName, void* callback);
+bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void* callback);
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback);
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback);
 bool dispatchUpdateEvent(double deltaT, void* callback);

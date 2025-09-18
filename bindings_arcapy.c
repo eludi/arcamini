@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern char* ResourceGetText(const char* name);
-
 static bool handleException() {
 	char* msg = py_formatexc();
 	if(msg) {
@@ -33,6 +31,41 @@ static bool py_WindowClearColor(int argc, py_StackRef argv) {
 		return false;
 
 	WindowClearColor((uint32_t)color);
+	py_newnone(py_retval());
+	return true;
+}
+
+// experimental switchScene() implementation for supporting multiple scenes
+static bool py_switchScene(int argc, py_StackRef argv) {
+	const char* fname = py_tostr(py_arg(0));
+	const char** args = argc>1 ? (const char**)malloc((argc-1) * sizeof(char*)) : NULL;
+	for(int i=1; i<argc; ++i) {
+		py_str(py_arg(i));
+		args[i-1] = py_tostr(py_retval());
+	}
+
+	char* script = ResourceGetText(fname);
+	if(!script)
+		return ImportError("window.switchScene(%s): file not found", fname);
+
+	// call leave event on current script
+	dispatchLifecycleEvent("leave", NULL);
+	// clear current callbacks
+	py_setglobal(py_name("enter"), py_NIL());
+	py_setglobal(py_name("input"), py_NIL());
+	py_setglobal(py_name("update"), py_NIL());
+	py_setglobal(py_name("draw"), py_NIL());
+	py_setglobal(py_name("leave"), py_NIL());
+
+	bool ok = py_exec(script, fname, EXEC_MODE, NULL);
+	free(script);
+	if(!ok || py_checkexc(false)) {
+		free(args);
+		return handleException();
+	}
+	dispatchLifecycleEventArgv("enter", argc-1, (char**)args, NULL);
+	free(args);
+
 	py_newnone(py_retval());
 	return true;
 }
@@ -332,6 +365,7 @@ static void bindArcamini() {
 	py_bindfunc(window_ns, "width", py_WindowWidth);
 	py_bindfunc(window_ns, "height", py_WindowHeight);
 	py_bindfunc(window_ns, "color", py_WindowClearColor);
+	py_bindfunc(window_ns, "switchScene", py_switchScene);
 
 	// gfx namespace, only used by draw callback
 	gfx_ns = py_newmodule("gfx");
@@ -399,7 +433,7 @@ void* initVM(const char* script, const char* scriptName) {
 bool dispatchLifecycleEvent(const char* evtName, void* callback) {
 	(void)callback;
 	py_Ref fn = py_getglobal(py_name(evtName));
-	if(!fn)
+	if(!fn || (py_typeof(fn) != tp_function && py_typeof(fn) != tp_nativefunc))
 		return true;
 
 	py_push(fn);
@@ -409,10 +443,31 @@ bool dispatchLifecycleEvent(const char* evtName, void* callback) {
 	return true;
 }
 
+bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void* callback) {
+	(void)callback;
+	py_Ref fn = py_getglobal(py_name(evtName));
+	if(!fn || (py_typeof(fn) != tp_function && py_typeof(fn) != tp_nativefunc))
+		return true;
+
+	py_push(fn);
+	py_pushnil();
+	// dispatch arguments as a single list:
+	py_newlist(py_getreg(0));
+	for(int i=0; i<argc; ++i) {
+		py_Ref val = py_getreg(1);
+		py_newstr(val, argv[i]);
+		py_list_append(py_getreg(0), val);
+	}
+	py_push(py_getreg(0));
+	if(!py_vectorcall(1, 0))
+		return handleException();
+	return true;
+}
+
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
 	(void)callback;
 	py_Ref fnInput = py_getglobal(py_name("input"));
-	if(!fnInput)
+	if(!fnInput || (py_typeof(fnInput) != tp_function && py_typeof(fnInput) != tp_nativefunc))
 		return;
 
 	py_push(fnInput);
@@ -438,7 +493,7 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
 	arcmWindowCloseOnButton67(id, button, value);
 
 	py_Ref fnInput = py_getglobal(py_name("input"));
-	if(!fnInput)
+	if(!fnInput || (py_typeof(fnInput) != tp_function && py_typeof(fnInput) != tp_nativefunc))
 		return;
 
 	py_push(fnInput);
@@ -462,7 +517,7 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
 bool dispatchUpdateEvent(double deltaT, void* callback) {
 	(void)callback;
 	py_Ref fnUpdate = py_getglobal(py_name("update"));
-	if(!fnUpdate)
+	if(!fnUpdate || (py_typeof(fnUpdate) != tp_function && py_typeof(fnUpdate) != tp_nativefunc))
 		return false;
 	py_push(fnUpdate);
 	py_pushnil();
@@ -477,7 +532,7 @@ bool dispatchUpdateEvent(double deltaT, void* callback) {
 void dispatchDrawEvent(void* callback) {
 	(void)callback;
 	py_Ref fnDraw = py_getglobal(py_name("draw"));
-	if(!fnDraw)
+	if(!fnDraw || (py_typeof(fnDraw) != tp_function && py_typeof(fnDraw) != tp_nativefunc))
 		return;
 	
 	py_push(fnDraw);

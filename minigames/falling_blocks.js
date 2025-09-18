@@ -11,13 +11,13 @@ function beep(freq, dur, vol = 1.0) {
 const hit = beep(220, 0.2, 0.8);
 const notes = [440, 494, 554, 659, 740, 880].map(f => beep(f, 0.05, 0.2));
 
-function load() {
+function startup() {
     window.color(0x202020ff);
     let h = resource.getStorageItem("highscore");
     highscore = h ? parseInt(h) : 0;
 }
 
-function unload() {
+function shutdown() {
     resource.setStorageItem("highscore", String(score > highscore ? score : highscore));
 }
 

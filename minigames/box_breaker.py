@@ -4,7 +4,7 @@ winX, winY, sc = window.width(), window.height(), window.height()/480
 ball, paddle, bricks, score, state = {"x":0,"y":0,"vx":0,"vy":0}, {"w":80*sc,"h":10*sc,"vx":0}, [], 0, "play"
 hit = resource.createAudio([math.sin(2*math.pi*440*n/44100) for n in range(int(44100*0.05))])
 
-def load():
+def startup():
     global ball, paddle, bricks, score, state
     w,h=winX//10,20*sc
     bricks=[]
@@ -14,7 +14,7 @@ def load():
     score=0; state="play"; window.color(0x202020ff)
 
 def input(evt,dev,id,val,v2):
-    if state=="over" and evt=="button" and val>0: load()
+    if state=="over" and evt=="button" and val>0: startup()
     elif evt=="axis" and id%2==0: paddle["vx"] = val * paddle["w"] * 4
 
 def update(dt):
