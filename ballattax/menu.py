@@ -1,7 +1,7 @@
 # menu.py - arcapy/PocketPy port
 
 from beeper import beeper
-import resource, window
+from arcamini import resource, window
 from scene import switchScene
 
 bgColor = 0xFF4080FF

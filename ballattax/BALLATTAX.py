@@ -1,6 +1,4 @@
-# BALLATTAX.py - arcapy/PocketPy port of main.lua
-
-import window
+from arcamini import window
 from scene import switchScene, currentScene
 from menu import Menu
 

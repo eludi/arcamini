@@ -23,7 +23,7 @@
 					{ "name":"args", "type":"array<string>", "description": "the arguments passed to switchScene() or as command line parameters after the script name if the scene was loaded at startup" }
 				],
 				"returnType": null,
-				"description": "Called when entering a scene, either after startup or after a call to switchScene()"
+				"description": "Called when entering a script/scene, either after startup or after a call to switchScene()"
 			},
 			{ "function":"input",
 				"parameters": [

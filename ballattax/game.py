@@ -3,7 +3,7 @@
 from beeper import beeper
 from scene import switchScene
 from menu import Menu
-import resource, window
+from arcamini import resource, window
 import random
 
 vpSz = 0

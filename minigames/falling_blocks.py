@@ -1,4 +1,5 @@
-import random, math, window, resource, audio
+import random, math
+from arcamini import window, resource, audio
 
 blocks, score, highscore, state = [], 0, 0, "play"
 font, winSzX, winSzY, sc = 0, window.width(), window.height(), window.width() / 640

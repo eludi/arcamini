@@ -1,4 +1,5 @@
-import math, random, window, resource, audio
+import math, random
+from arcamini import window, resource, audio
 
 winX, winY, sc = window.width(), window.height(), window.height()//240
 grid = 10*sc

@@ -360,12 +360,16 @@ static bool py_ResourceSetStorageItem(int argc, py_StackRef argv) {
 static py_GlobalRef gfx_ns = NULL;
 
 static void bindArcamini() {
-	// window namespace
-	py_GlobalRef window_ns = py_newmodule("window");
+	// unified arcamini namespace
+	py_GlobalRef arcamini_ns = py_newmodule("arcamini");
+	// window subnamespace
+
+	py_Ref window_ns = py_newmodule("window");
 	py_bindfunc(window_ns, "width", py_WindowWidth);
 	py_bindfunc(window_ns, "height", py_WindowHeight);
 	py_bindfunc(window_ns, "color", py_WindowClearColor);
 	py_bindfunc(window_ns, "switchScene", py_switchScene);
+	py_setdict(arcamini_ns, py_name("window"), window_ns);
 
 	// gfx namespace, only used by draw callback
 	gfx_ns = py_newmodule("gfx");
@@ -378,12 +382,13 @@ static void bindArcamini() {
 	py_bindfunc(gfx_ns, "fillText", py_gfxFillTextAlign);
 
 	// audio namespace
-	py_GlobalRef audio_ns = py_newmodule("audio");
+	py_Ref audio_ns = py_newmodule("audio");
 	py_bindfunc(audio_ns, "replay", py_AudioReplay);
 	py_bindfunc(audio_ns, "volume", py_AudioVolume);
+	py_setdict(arcamini_ns, py_name("audio"), audio_ns);
 
 	// resource namespace
-	py_GlobalRef resource_ns = py_newmodule("resource");
+	py_Ref resource_ns = py_newmodule("resource");
 	py_bindfunc(resource_ns, "getImage", py_ResourceGetImage);
 	py_bindfunc(resource_ns, "createImage", py_ResourceCreateImage);
 	py_bindfunc(resource_ns, "createSVGImage", py_ResourceCreateSVGImage);
@@ -393,6 +398,7 @@ static void bindArcamini() {
 	py_bindfunc(resource_ns, "getFont", py_ResourceGetFont);
 	py_bindfunc(resource_ns, "getStorageItem", py_ResourceGetStorageItem);
 	py_bindfunc(resource_ns, "setStorageItem", py_ResourceSetStorageItem);
+	py_setdict(arcamini_ns, py_name("resource"), resource_ns);
 }
 
 

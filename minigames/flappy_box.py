@@ -1,4 +1,5 @@
-import random, math, window, resource, audio
+import random, math
+from arcamini import window, resource, audio
 
 winSzX, winSzY, sc = window.width(), window.height(), window.height()/480
 player, pipes, score, state = {"y":0,"vy":0}, [], 0, "play"

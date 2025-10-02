@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 	}
 
 	if(!ResourceArchiveOpen(archiveName)) {
-		fprintf(stderr, "Opening current working directory failed.\n");
+		fprintf(stderr, "Opening archive \"%s\" failed.\n", archiveName);
 		return -1;
 	}
 	char* script = ResourceGetText(scriptName);

@@ -1,4 +1,5 @@
-import window, math, sys
+import math, sys
+from arcamini import window
 
 now = 0.0
 print("yay, switchScene worked!")

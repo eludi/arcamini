@@ -1,4 +1,5 @@
-import random, window
+import random
+from arcamini import window
 
 def erroneous():
     raise RuntimeError("This is an error for testing purposes.")

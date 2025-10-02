@@ -1,4 +1,5 @@
-import resource, window, audio, math
+from arcamini import resource, window, audio
+import math
 
 img = resource.getImage("test.png")
 font = resource.getFont("Viafont.ttf", 32)

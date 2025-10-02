@@ -1,4 +1,5 @@
-import random, math, window, resource, audio
+import random, math
+from arcamini import window, resource, audio
 
 winX, winY, sc = window.width(), window.height(), window.height()/480
 ball, paddle, bricks, score, state = {"x":0,"y":0,"vx":0,"vy":0}, {"w":80*sc,"h":10*sc,"vx":0}, [], 0, "play"

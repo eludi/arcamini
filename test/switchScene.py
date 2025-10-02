@@ -1,4 +1,4 @@
-import window
+from arcamini import window
 
 now = 0.0
 

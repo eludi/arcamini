@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 	}
 
 	if(!ResourceArchiveOpen(archiveName)) {
-		fprintf(stderr, "Opening current working directory failed.\n");
+		fprintf(stderr, "Opening archive \"%s\" failed.\n", archiveName);
 		return -1;
 	}
 	char* script = ResourceGetText(scriptName);
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 	gfxInit(winSzX, winSzY, 1, WindowRenderer());
 
 	char* scriptBaseName = ResourceBaseName(scriptName);
-	arcmStorageInit("arcaqpy", scriptBaseName);
+	arcmStorageInit("arcapy", scriptBaseName);
 	for(char* pch = scriptBaseName; *pch; ++pch)
 		if(*pch=='_')
 			*pch=' ';

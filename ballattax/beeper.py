@@ -1,5 +1,5 @@
 # beeper.py - arcapy/PocketPy port
-import resource, audio
+from arcamini import resource, audio
 
 class Beeper:
     def __init__(self):
