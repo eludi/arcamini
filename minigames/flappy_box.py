@@ -6,13 +6,13 @@ player, pipes, score, state = {"y":0,"vy":0}, [], 0, "play"
 notes = [resource.createAudio([math.sin(2*math.pi*f*n/44100)
     for n in range(8000 if f==220 else 2000)]) for f in (220,440,554,659,880)]
 
-def startup():
+def enter(args):
     global player, pipes, score, state
     player["y"]=winSzY//2; player["vy"]=0; pipes.clear(); score=0; state="play"
     window.color(0x202020ff)
 
 def input(evt,dev,id,val,v2=None):
-    if state=="over" and evt=="button" and val>0: startup()
+    if state=="over" and evt=="button" and val>0: enter(None)
     elif state=="play" and evt=="button" and val>0: player["vy"]=-250*sc
 
 def update(dt):

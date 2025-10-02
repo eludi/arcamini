@@ -4,9 +4,9 @@ from arcamini import window
 def erroneous():
     raise RuntimeError("This is an error for testing purposes.")
 
-def startup():
+def enter(args):
     window.color(0x0055aaff)
-    print("startup")
+    print("enter called, args:", args)
     if random.random() < 0.5:
         erroneous()
 

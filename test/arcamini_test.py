@@ -16,8 +16,8 @@ print("Storage value:", val)
 frame = 0
 
 # window module
-def startup():
-    print("startup called")
+def enter(args):
+    print("enter called, args:", args)
     print("window dimensions:", window.width(), window.height())
     window.color(0x000055ff)
     audio.replay(sample, 1, 0.5)
@@ -47,5 +47,5 @@ def draw(gfx):
         print("draw called at frame", frame)
     frame += 1
 
-def shutdown():
-    print("shutdown called")
+def leave():
+    print("leave called")

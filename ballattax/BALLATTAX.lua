@@ -32,9 +32,7 @@ function switchScene(newScene, args)
 end
 
 -- Lifecycle callbacks
-function startup()
-    local args = {}
-
+function enter(args)
     window.color(0x000000FF) -- Set background color
     switchScene(require(args.scene or "menu"), args)
 end

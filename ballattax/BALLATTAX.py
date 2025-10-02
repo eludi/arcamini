@@ -7,9 +7,9 @@ inputs = [
     {'axes': [0, 0], 'buttons': [0, 0, 0, 0, 0, 0, 0, 0]}
 ]
 
-def startup(args=None):
+def enter(args):
     window.color(0x000000FF)  # Set background color
-    switchScene(Menu(), args or {})
+    switchScene(Menu(), args)
 
 def input(evt,device,id,value,value2):
     global inputs

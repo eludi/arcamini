@@ -160,7 +160,7 @@ function draw(gfx)
     gfx.fillText(0, winW - 60, winH - 20, fps)
 end
 
-function startup()
+function enter(args)
     math.randomseed(os.time())
     local winW, winH = window.width(), window.height()
     for i=1,objCounts[#objCounts] do

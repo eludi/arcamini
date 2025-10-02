@@ -17,8 +17,8 @@ print("Storage value:", val)
 
 frame = 0
 
-function startup()
-    print("startup called")
+function enter(args)
+    print("enter called, args:", args)
     print("window dimensions:", window.width(), window.height())
     window.color(0x000055ff)
     audio.replay(sample, 1, 0.5)
@@ -52,6 +52,6 @@ function draw(gfx)
     frame = frame + 1
 end
 
-function shutdown()
-    print("shutdown called")
+function leave()
+    print("leave called")
 end

@@ -20,7 +20,7 @@ function switchScene(newScene, args) {
 }
 
 // Lifecycle callbacks
-function startup(args = {}) {
+function enter(args = {}) {
     window.color(0x000000FF); // Set background color
     switchScene(require(args.scene || 'menu.js'), args);
 }

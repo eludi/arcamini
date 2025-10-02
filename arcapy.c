@@ -115,8 +115,7 @@ int main(int argc, char** argv) {
 		WindowControllerOpen(i, 0);
 	WindowEventHandler(arcmDispatchInputEvents, vm);
 
-	if(dispatchLifecycleEvent("startup", vm)) {
-		dispatchLifecycleEventArgv("enter", argc-argn-1, argv+argn+1, vm);
+	if(dispatchLifecycleEventArgv("enter", argc-argn-1, argv+argn+1, vm)) {
 		while(WindowIsOpen()) {
 			if (debug_port > 0)
 				pkpy_debug_poll();
@@ -131,7 +130,6 @@ int main(int argc, char** argv) {
 				break;
 		}
 		dispatchLifecycleEvent("leave", vm);
-		dispatchLifecycleEvent("shutdown", vm);
 	}
 
 	if(debug) {

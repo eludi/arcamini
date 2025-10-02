@@ -16,8 +16,8 @@ console.log("Storage value:", val);
 
 let frame = 0;
 
-function startup() {
-    console.log("startup called");
+function enter(args) {
+    console.log("enter called, args:", args);
     console.log("window dimensions:", window.width(), window.height());
     window.color(0x000055ff);
     audio.replay(sample, 1, 0.5);
@@ -51,6 +51,6 @@ function draw(gfx) {
     frame += 1;
 }
 
-function shutdown() {
-    console.log("shutdown called");
+function leave() {
+    console.log("leave called");
 }

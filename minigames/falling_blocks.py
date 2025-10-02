@@ -14,13 +14,13 @@ def beep(freq, dur, vol=1.0):
 hit = beep(220, .2, .8)
 notes = [beep(f, .05, .2) for f in (440, 494, 554, 659, 740, 880)]
 
-def startup():
+def enter(args):
     window.color(0x202020ff)
     h = resource.getStorageItem("highscore")
     global highscore
     highscore = int(h) if h else 0
 
-def shutdown():
+def leave():
     resource.setStorageItem("highscore", str(score if score > highscore else highscore))
 
 def input(evt, dev, id, val, v2):
