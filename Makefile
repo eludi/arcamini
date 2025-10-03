@@ -1,39 +1,48 @@
 CC     = gcc
-CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG -DPK_ENABLE_OS=0
+CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG
 
-SDL = ../SDL2
+SDL             = ../SDL2
+INCDIR          = -I$(SDL)/include -D_REENTRANT -Iexternal -Iexternal/arcajs
 
 ifeq ($(OS),Windows_NT)
   OS            = win32
   ARCH          = $(OS)-x64
 else
   OS            = $(shell uname -s)
-  ARCH          = $(OS)_$(shell uname -m)
+  MACHINE       = $(shell uname -m)
+  ARCH          = $(OS)_$(MACHINE)
 endif
 
 ifeq ($(OS),Linux)
-  INCDIR        = -I$(SDL)/include -D_REENTRANT -Iexternal -Iexternal/arcajs
   LIBS          = -rdynamic -Lexternal/$(ARCH) -larcajs
+  SHLIBS        = -rdynamic -Lexternal/$(ARCH) -larcajs
   ifeq ($(ARCH),Linux_armv7l)
     LIBS       += -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -Wl,-rpath,/opt/vc/lib -L/opt/vc/lib -lbcm_host -lpthread -lrt -ldl -lm
+    SHLIBS     += -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -Wl,-rpath,/opt/vc/lib -L/opt/vc/lib -lbcm_host -lpthread -lrt -ldl -lm
   else
     LIBS       += -L$(SDL)/lib/$(ARCH) -Wl,-rpath,$(SDL)/lib/$(ARCH) -Wl,--enable-new-dtags -lSDL2 -Wl,--no-undefined -lpthread -ldl -lm
+    SHLIBS     += -lSDL2 -Wl,--no-undefined -lpthread -ldl -lm -s
   endif
-  GLLIBS        = -lGL
   CFLAGS       += -fPIC -no-pie
   EXESUFFIX     =
+  DLLPREFIX     = lib
+  DLLSUFFIX     = .$(MACHINE).so
   RM = rm -f
   SEP = /
 else
   ifeq ($(OS),Darwin) # MacOS
     EXESUFFIX = .app
+    DLLPREFIX = lib
+    DLLSUFFIX = .dylib
   else # windows, MinGW
-    INCDIR        = -I$(SDL)/include -Iexternal -Iexternal/arcajs
     LIBS          = -Lexternal/$(ARCH) -larcajs \
                     -L$(SDL)/lib/$(ARCH) -static -lmingw32 -lSDL2main -lSDL2 -Wl,--no-undefined -lm \
                     -ldinput8 -ldxguid -ldxerr8 -luser32 -lgdi32 -lwinmm -limm32 -lole32 -loleaut32 \
                     -lshell32 -lsetupapi -lversion -luuid -lwininet -lwsock32 -static-libgcc -mwindows
+    SHLIBS        = $(LIBS)
     EXESUFFIX     = .exe
+    DLLPREFIX     =
+    DLLSUFFIX     = .dll
     RM = del /s
     SEP = \\#
   endif
@@ -51,15 +60,20 @@ SRCLUA = arcalua.c bindings_arcalua.c arcamini.c
 OBJLUA = $(SRCLUA:.c=.o)
 EXELUA = arcalua$(EXESUFFIX)
 
-all: $(EXEPY) $(EXEQJS) $(EXELUA)
+SRCLIB = libarcamini.c arcamini.c
+LIB = $(DLLPREFIX)arcamini$(DLLSUFFIX)
+
+all: $(EXEPY) $(EXEQJS) $(EXELUA) $(LIB)
 
 # executable link rules:
 $(EXEPY) : $(OBJPY)
-	$(CC) $(CFLAGS) $^ $(LIB) $(LIBS) -o $@ -s
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -s
 $(EXEQJS) : $(OBJQJS)
-	$(CC) $(CFLAGS) $^ $(LIB) $(LIBS) -lquickjs -o $@ -s
+	$(CC) $(CFLAGS) $^ $(LIBS) -lquickjs -o $@ -s
 $(EXELUA) : $(OBJLUA)
-	$(CC) $(CFLAGS) $^ $(LIB) $(LIBS) -o $@ -s
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -s
+$(LIB) : $(SRCLIB)
+	$(CC) $(INCDIR) $(CFLAGS) -shared -o $@ $^ $(SHLIBS)
 
 arcapy.o: arcapy.c bindings.h pkpy_debug.h arcamini.h
 arcaqjs.o: arcaqjs.c arcamini.h bindings.h qjs_debug.h
@@ -75,4 +89,4 @@ bindings_arcaqjs.o: bindings.h bindings_arcaqjs.c arcamini.h
 	$(CC) $(CFLAGS) $(INCDIR) -c $< -o $@
 
 clean:
-	$(RM) $(OBJPY) $(OBJQJS)  $(OBJLUA) $(EXEPY) $(EXEQJS) $(EXELUA)
+	$(RM) $(OBJPY) $(OBJQJS)  $(OBJLUA) $(EXEPY) $(EXEQJS) $(EXELUA) $(LIB)

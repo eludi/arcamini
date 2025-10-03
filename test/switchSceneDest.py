@@ -7,6 +7,10 @@ print("yay, switchScene worked!")
 def enter(args):
     print("enter called with args:", args)
 
+def input(evt, device, id, value, value2):
+    if evt == 'button' and value == 1:
+        window.switchScene("switchScene.py", "back", "to", "the", "first", "scene")
+
 def update(deltaT):
     global now
     now += deltaT

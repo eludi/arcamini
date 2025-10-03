@@ -5,6 +5,12 @@ function enter(args)
     print('enter called with args:', args)
 end
 
+function input(evt, device, id, value, value2)
+    if evt == 'button' and value == 1 then
+        window.switchScene("switchScene.lua", "back", "to", "the", "first", "scene")
+    end
+end
+
 function update(deltaT)
     now = now + deltaT
     return true

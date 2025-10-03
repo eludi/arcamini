@@ -5,6 +5,11 @@ function enter(args) {
     console.log('enter called with args:', args);
 }
 
+function input(evt, device, id, value, value2) {
+    if (evt == 'button' && value == 1)
+        window.switchScene("switchScene.js", "back", "to", "the", "first", "scene");
+}
+
 function update(deltaT) {
     now += deltaT;
     return true;
