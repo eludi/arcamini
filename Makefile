@@ -44,7 +44,7 @@ else
 		EXESUFFIX		= .exe
 		DLLPREFIX		=
 		DLLSUFFIX		= .dll
-		RM = del /s
+		RM = del
 		SEP = \\#
 		CP = copy
 	endif
