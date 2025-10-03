@@ -1,5 +1,5 @@
 import random, math
-import resource, window
+from arcamini import resource, window
 
 window.color(0x224466ff)
 numObj = 200
@@ -15,7 +15,7 @@ frames = 0
 fps = ''
 now = 0
 
-sprites = resource.getTileGrid(resource.getImage('flags.png', 1, 1, 0.5, 0.5), 6, 5, 2)
+sprites = resource.getTileGrid(resource.getImage('flags.png', 1, 0.5, 0.5), 6, 5, 2)
 
 LINE_SIZE = 24
 
