@@ -86,7 +86,7 @@ void gfxDrawBatch(const uint8_t* ops, uint32_t ops_len, const char* strings, uin
                 gfxFillTextAlign(font, x, y, strings + textOffset, align);
             } break;
             default:
-                fprintf(stderr, "gfxRenderBatch: unknown opcode %u at position %ld\n", opcode, p - ops);
+                fprintf(stderr, "gfxRenderBatch: unknown opcode %u at position %u\n", opcode, (uint32_t)(p - ops));
                 return;
         }
     }
