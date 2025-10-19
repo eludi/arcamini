@@ -24,7 +24,7 @@ ifeq ($(OS),Linux)
 		SHLIBS			+= -lSDL2 -Wl,--no-undefined -lpthread -ldl -lm -s
 	endif
 	CFLAGS				+= -fPIC -no-pie
-	EXESUFFIX			=
+	EXESUFFIX			= .$(MACHINE)
 	DLLPREFIX			= lib
 	DLLSUFFIX			= .$(MACHINE).so
 	RM = rm -f

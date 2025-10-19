@@ -6,18 +6,20 @@ if [ "$#" -lt 1 ]; then
     exit 99
 fi
 
+MACHINE=$(uname -m)
+
 # Get last argument (POSIX way)
 for last_arg; do :; done
 
 case "$last_arg" in
     *.lua)
-        exec ./arcalua "$@"
+        exec ./arcalua."$MACHINE" "$@"
         ;;
     *.js)
-        exec ./arcaqjs "$@"
+        exec ./arcaqjs."$MACHINE" "$@"
         ;;
     *.py)
-        exec ./arcapy "$@"
+        exec ./arcapy."$MACHINE" "$@"
         ;;
     *)
         echo "Unknown script type: $last_arg" >&2
