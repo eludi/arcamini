@@ -100,10 +100,10 @@
 			},
 			{ "function":"clipRect",
 				"parameters": [
-					{ "name":"x", "type":"float", "description": "the horizontal position of the clipping rectangle's upper left corner" },
-					{ "name":"y", "type":"float", "description": "the vertical position of the clipping rectangle's upper left corner" },
-					{ "name":"w", "type":"float", "description": "the width of the clipping rectangle" },
-					{ "name":"h", "type":"float", "description": "the height of the clipping rectangle" }
+					{ "name":"x", "type":"int", "description": "the horizontal position of the clipping rectangle's upper left corner" },
+					{ "name":"y", "type":"int", "description": "the vertical position of the clipping rectangle's upper left corner" },
+					{ "name":"w", "type":"int", "description": "the width of the clipping rectangle" },
+					{ "name":"h", "type":"int", "description": "the height of the clipping rectangle" }
 				],
 				"returnType": null,
 				"description": "Sets the clipping viewport for all subsequent draw calls in screen space. Default is (0,0,width,height) of the window. Use negative width/height to disable clipping."

@@ -79,6 +79,14 @@ Sets the line width for drawLine and drawRect
 #### Parameters:
 - {float} w - the line width. Default is 1.0 pixels
 
+### function clipRect
+Sets the clipping viewport for all subsequent draw calls in screen space. Default is (0,0,width,height) of the window. Use negative width/height to disable clipping.
+#### Parameters:
+- {int} x - the horizontal position of the clipping rectangle's upper left corner
+- {int} y - the vertical position of the clipping rectangle's upper left corner
+- {int} w - the width of the clipping rectangle
+- {int} h - the height of the clipping rectangle
+
 ### function fillRect
 Draws a filled rectangle at position (x,y) with width w and height h
 #### Parameters:
