@@ -45,7 +45,9 @@ function draw(gfx)
     gfx.drawLine(0, 0, 100, 100)
     gfx.fillText(font, 20, 120, "Hello", 0)
     gfx.color(0xFFffFFff)
+    gfx.clipRect(50+frame%224,200,32,256)
     gfx.drawImage(img, 50, 200)
+    gfx.clipRect(0,0,-1,-1)
     if frame < 2 then
         print("draw called at frame", frame)
     end
