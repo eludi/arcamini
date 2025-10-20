@@ -8,47 +8,45 @@
 
 // clang-format off
 
-#define PK_VERSION				"2.0.8"
+#define PK_VERSION				"2.1.3"
 #define PK_VERSION_MAJOR            2
-#define PK_VERSION_MINOR            0
-#define PK_VERSION_PATCH            8
+#define PK_VERSION_MINOR            1
+#define PK_VERSION_PATCH            3
 
 /*************** feature settings ***************/
-
-// Reduce the startup memory usage for embedded systems
-#ifndef PK_LOW_MEMORY_MODE          // can be overridden by cmake
-#define PK_LOW_MEMORY_MODE          0
-#endif
-
-// Whether to compile os-related modules or not
 #ifndef PK_ENABLE_OS                // can be overridden by cmake
 #define PK_ENABLE_OS                1
 #endif
 
-// GC min threshold
-#ifndef PK_GC_MIN_THRESHOLD         // can be overridden by cmake
-    #if PK_LOW_MEMORY_MODE
-        #define PK_GC_MIN_THRESHOLD     2048
-    #else
-        #define PK_GC_MIN_THRESHOLD     32768
-    #endif
+#ifndef PK_ENABLE_THREADS           // can be overridden by cmake
+#define PK_ENABLE_THREADS           1
 #endif
 
-// Memory allocation functions
-#ifndef PK_MALLOC
-#define PK_MALLOC(size)             malloc(size)
-#define PK_REALLOC(ptr, size)       realloc(ptr, size)
-#define PK_FREE(ptr)                free(ptr)
+#ifndef PK_ENABLE_DETERMINISM       // must be enabled from cmake
+#define PK_ENABLE_DETERMINISM       0
+#endif
+
+#ifndef PK_ENABLE_WATCHDOG          // can be overridden by cmake
+#define PK_ENABLE_WATCHDOG          0                
+#endif
+
+#ifndef PK_ENABLE_CUSTOM_SNAME      // can be overridden by cmake
+#define PK_ENABLE_CUSTOM_SNAME      0                
+#endif
+
+#ifndef PK_ENABLE_MIMALLOC          // can be overridden by cmake
+#define PK_ENABLE_MIMALLOC          0                
+#endif
+
+// GC min threshold
+#ifndef PK_GC_MIN_THRESHOLD         // can be overridden by cmake
+    #define PK_GC_MIN_THRESHOLD     32768
 #endif
 
 // This is the maximum size of the value stack in py_TValue units
 // The actual size in bytes equals `sizeof(py_TValue) * PK_VM_STACK_SIZE`
 #ifndef PK_VM_STACK_SIZE            // can be overridden by cmake
-    #if PK_LOW_MEMORY_MODE
-        #define PK_VM_STACK_SIZE    2048
-    #else
-        #define PK_VM_STACK_SIZE    16384
-    #endif
+    #define PK_VM_STACK_SIZE        16384
 #endif
 
 // This is the maximum number of local variables in a function
@@ -67,10 +65,50 @@
 #define PK_M_DEG2RAD                0.017453292519943295
 #define PK_M_RAD2DEG                57.29577951308232
 
+// Hash table load factor (smaller ones mean less collision but more memory)
+// For class instance
+#define PK_INST_ATTR_LOAD_FACTOR    0.67f
+// For class itself
+#define PK_TYPE_ATTR_LOAD_FACTOR    0.5f
+
 #ifdef _WIN32
     #define PK_PLATFORM_SEP '\\'
 #else
     #define PK_PLATFORM_SEP '/'
+#endif
+
+#ifdef __cplusplus
+    #ifndef restrict
+        #define restrict
+    #endif
+#endif
+
+#if PK_ENABLE_THREADS
+    #define PK_THREAD_LOCAL _Thread_local
+#else
+    #define PK_THREAD_LOCAL
+#endif
+
+// Memory allocation functions
+#ifndef PK_MALLOC
+    #if PK_ENABLE_MIMALLOC
+        #include "mimalloc.h"
+        #define PK_MALLOC(size)                 mi_malloc(size)
+        #define PK_REALLOC(ptr, size)           mi_realloc(ptr, size)
+        #define PK_FREE(ptr)                    mi_free(ptr)
+    #else
+        #ifndef __cplusplus
+            #include <stdlib.h>
+            #define PK_MALLOC(size)             malloc(size)
+            #define PK_REALLOC(ptr, size)       realloc(ptr, size)
+            #define PK_FREE(ptr)                free(ptr)
+        #else
+            #include <cstdlib>
+            #define PK_MALLOC(size)             std::malloc(size)
+            #define PK_REALLOC(ptr, size)       std::realloc(ptr, size)
+            #define PK_FREE(ptr)                std::free(ptr)
+        #endif
+    #endif
 #endif
 
 
@@ -131,6 +169,24 @@
     #define PK_IS_DESKTOP_PLATFORM 0
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+    #define PK_DEPRECATED __attribute__((deprecated))
+#else
+    #define PK_DEPRECATED
+#endif
+
+#ifdef NDEBUG
+    #if defined(__GNUC__)
+        #define PK_INLINE __attribute__((always_inline)) inline
+    #elif defined(_MSC_VER)
+        #define PK_INLINE __forceinline
+    #else
+        #define PK_INLINE inline
+    #endif
+#else
+    #define PK_INLINE
+#endif
+
 
 
 #include <stdint.h>
@@ -167,6 +223,16 @@ typedef union c11_mat3x3 {
     float data[9];
 } c11_mat3x3;
 
+typedef union c11_color32 {
+    struct {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
+    };
+    unsigned char data[4];
+} c11_color32;
+
 
 
 #include <stdint.h>
@@ -178,12 +244,12 @@ extern "C" {
 #endif
 
 /************* Public Types *************/
-
+/// A helper struct for `py_Name`.
+typedef struct py_OpaqueName py_OpaqueName;
+/// A pointer that represents a python identifier. For fast name resolution.
+typedef py_OpaqueName* py_Name;
 /// A opaque type that represents a python object. You cannot access its members directly.
 typedef struct py_TValue py_TValue;
-/// An integer that represents a python identifier. This is to achieve string pooling and fast name
-/// resolution.
-typedef uint16_t py_Name;
 /// An integer that represents a python type. `0` is invalid.
 typedef int16_t py_Type;
 /// A 64-bit integer type. Corresponds to `int` in python.
@@ -192,6 +258,19 @@ typedef int64_t py_i64;
 typedef double py_f64;
 /// A generic destructor function.
 typedef void (*py_Dtor)(void*);
+
+#ifdef PK_IS_PUBLIC_INCLUDE
+typedef struct py_TValue {
+    py_Type type;
+    bool is_ptr;
+    int extra;
+
+    union {
+        int64_t _i64;
+        char _chars[16];
+    };
+} py_TValue;
+#endif
 
 /// A string view type. It is helpful for passing strings which are not null-terminated.
 typedef struct c11_sv {
@@ -212,7 +291,7 @@ typedef py_TValue* py_GlobalRef;
 typedef py_TValue* py_StackRef;
 /// An item reference to a container object. It invalidates when the container is modified.
 typedef py_TValue* py_ItemRef;
-/// An output reference for returning a value.
+/// An output reference for returning a value. Only use this for function arguments.
 typedef py_TValue* py_OutRef;
 
 typedef struct py_Frame py_Frame;
@@ -220,7 +299,6 @@ typedef struct py_Frame py_Frame;
 // An enum for tracing events.
 enum py_TraceEvent {
     TRACE_EVENT_LINE,
-    TRACE_EVENT_EXCEPTION,
     TRACE_EVENT_PUSH,
     TRACE_EVENT_POP,
 };
@@ -229,12 +307,18 @@ typedef void (*py_TraceFunc)(py_Frame* frame, enum py_TraceEvent);
 
 /// A struct contains the callbacks of the VM.
 typedef struct py_Callbacks {
-    /// Used by `__import__` to load source code of a module.
+    /// Used by `__import__` to load a source module.
     char* (*importfile)(const char*);
+    /// Called before `importfile` to lazy-import a C module.
+    py_GlobalRef (*lazyimport)(const char*);
     /// Used by `print` to output a string.
     void (*print)(const char*);
+    /// Flush the output buffer of `print`.
+    void (*flush)();
     /// Used by `input` to get a character.
-    int (*getchar)();
+    int (*getchr)();
+    /// Used by `gc.collect()` to mark extra objects for garbage collection.
+    void (*gc_mark)(void (*f)(py_Ref val, void* ctx), void* ctx);
 } py_Callbacks;
 
 /// Native function signature.
@@ -247,13 +331,15 @@ typedef bool (*py_CFunction)(int argc, py_StackRef argv) PY_RAISE PY_RETURN;
 /// + `EXEC_MODE`: for statements.
 /// + `EVAL_MODE`: for expressions.
 /// + `SINGLE_MODE`: for REPL or jupyter notebook execution.
-enum py_CompileMode { EXEC_MODE, EVAL_MODE, SINGLE_MODE };
+/// + `RELOAD_MODE`: for reloading a module without allocating new types if possible.
+enum py_CompileMode { EXEC_MODE, EVAL_MODE, SINGLE_MODE, RELOAD_MODE };
 
 /************* Global Setup *************/
 
 /// Initialize pocketpy and the default VM.
 PK_API void py_initialize();
-/// Finalize pocketpy and free all VMs.
+/// Finalize pocketpy and free all VMs. This opearation is irreversible.
+/// After this call, you cannot use any function from this header anymore.
 PK_API void py_finalize();
 /// Get the current VM index.
 PK_API int py_currentvm();
@@ -262,16 +348,39 @@ PK_API int py_currentvm();
 PK_API void py_switchvm(int index);
 /// Reset the current VM.
 PK_API void py_resetvm();
+/// Reset All VMs.
+PK_API void py_resetallvm();
 /// Get the current VM context. This is used for user-defined data.
 PK_API void* py_getvmctx();
 /// Set the current VM context. This is used for user-defined data.
 PK_API void py_setvmctx(void* ctx);
+/// Setup the callbacks for the current VM.
+PK_API py_Callbacks* py_callbacks();
+
 /// Set `sys.argv`. Used for storing command-line arguments.
 PK_API void py_sys_setargv(int argc, char** argv);
 /// Set the trace function for the current VM.
-PK_API void py_sys_settrace(py_TraceFunc func);
-/// Setup the callbacks for the current VM.
-PK_API py_Callbacks* py_callbacks();
+PK_API void py_sys_settrace(py_TraceFunc func, bool reset);
+/// Invoke the garbage collector.
+PK_API int py_gc_collect();
+
+/// Wrapper for `PK_MALLOC(size)`.
+PK_API void* py_malloc(size_t size);
+/// Wrapper for `PK_REALLOC(ptr, size)`.
+PK_API void* py_realloc(void* ptr, size_t size);
+/// Wrapper for `PK_FREE(ptr)`.
+PK_API void py_free(void* ptr);
+
+/// A shorthand for `True`.
+PK_API py_GlobalRef py_True();
+/// A shorthand for `False`.
+PK_API py_GlobalRef py_False();
+/// A shorthand for `None`.
+PK_API py_GlobalRef py_None();
+/// A shorthand for `nil`. `nil` is not a valid python object.
+PK_API py_GlobalRef py_NIL();
+
+/************* Frame Ops *************/
 
 /// Get the current source location of the frame.
 PK_API const char* py_Frame_sourceloc(py_Frame* frame, int* lineno);
@@ -283,6 +392,14 @@ PK_API void py_Frame_newlocals(py_Frame* frame, py_OutRef out);
 /// Returns `NULL` if not available.
 PK_API py_StackRef py_Frame_function(py_Frame* frame);
 
+/************* Code Execution *************/
+
+/// Compile a source string into a code object.
+/// Use python's `exec()` or `eval()` to execute it.
+PK_API bool py_compile(const char* source,
+                       const char* filename,
+                       enum py_CompileMode mode,
+                       bool is_dynamic) PY_RAISE PY_RETURN;
 /// Run a source string.
 /// @param source source string.
 /// @param filename filename (for error messages).
@@ -293,10 +410,8 @@ PK_API bool py_exec(const char* source,
                     const char* filename,
                     enum py_CompileMode mode,
                     py_Ref module) PY_RAISE PY_RETURN;
-
 /// Evaluate a source string. Equivalent to `py_exec(source, "<string>", EVAL_MODE, module)`.
 PK_API bool py_eval(const char* source, py_Ref module) PY_RAISE PY_RETURN;
-
 /// Run a source string with smart interpretation.
 /// Example:
 /// `py_newstr(py_r0(), "abc");`
@@ -312,31 +427,12 @@ PK_API bool py_smartexec(const char* source, py_Ref module, ...) PY_RAISE PY_RET
 /// `// res will be 3`.
 PK_API bool py_smarteval(const char* source, py_Ref module, ...) PY_RAISE PY_RETURN;
 
-/// Compile a source string into a code object.
-/// Use python's `exec()` or `eval()` to execute it.
-PK_API bool py_compile(const char* source,
-                       const char* filename,
-                       enum py_CompileMode mode,
-                       bool is_dynamic) PY_RAISE PY_RETURN;
-
-/// Python equivalent to `globals()`.
-PK_API void py_newglobals(py_OutRef);
-/// Python equivalent to `locals()`.
-PK_API void py_newlocals(py_OutRef);
-
-/************* Values Creation *************/
-
-/// A shorthand for `True`.
-PK_API py_GlobalRef py_True();
-/// A shorthand for `False`.
-PK_API py_GlobalRef py_False();
-/// A shorthand for `None`.
-PK_API py_GlobalRef py_None();
-/// A shorthand for `nil`. `nil` is not a valid python object.
-PK_API py_GlobalRef py_NIL();
+/************* Value Creation *************/
 
 /// Create an `int` object.
 PK_API void py_newint(py_OutRef, py_i64);
+/// Create a trivial value object.
+PK_API void py_newtrivial(py_OutRef out, py_Type type, void* data, int size);
 /// Create a `float` object.
 PK_API void py_newfloat(py_OutRef, py_f64);
 /// Create a `bool` object.
@@ -360,19 +456,6 @@ PK_API void py_newellipsis(py_OutRef);
 /// Create a `nil` object. `nil` is an invalid representation of an object.
 /// Don't use it unless you know what you are doing.
 PK_API void py_newnil(py_OutRef);
-/// Create a `tuple` with `n` UNINITIALIZED elements.
-/// You should initialize all elements before using it.
-PK_API py_ObjectRef py_newtuple(py_OutRef, int n);
-/// Create an empty `list`.
-PK_API void py_newlist(py_OutRef);
-/// Create a `list` with `n` UNINITIALIZED elements.
-/// You should initialize all elements before using it.
-PK_API void py_newlistn(py_OutRef, int n);
-/// Create an empty `dict`.
-PK_API void py_newdict(py_OutRef);
-/// Create an UNINITIALIZED `slice` object.
-/// You should use `py_setslot()` to set `start`, `stop`, and `step`.
-PK_API void py_newslice(py_OutRef);
 /// Create a `nativefunc` object.
 PK_API void py_newnativefunc(py_OutRef, py_CFunction);
 /// Create a `function` object.
@@ -383,8 +466,15 @@ PK_API py_Name py_newfunction(py_OutRef out,
                               int slots);
 /// Create a `boundmethod` object.
 PK_API void py_newboundmethod(py_OutRef out, py_Ref self, py_Ref func);
+/// Create a new object.
+/// @param out output reference.
+/// @param type type of the object.
+/// @param slots number of slots. Use `-1` to create a `__dict__`.
+/// @param udsize size of your userdata.
+/// @return pointer to the userdata.
+PK_API void* py_newobject(py_OutRef out, py_Type type, int slots, int udsize);
 
-/************* Name Conversions *************/
+/************* Name Conversion *************/
 
 /// Convert a null-terminated string to a name.
 PK_API py_Name py_name(const char*);
@@ -397,172 +487,6 @@ PK_API py_Name py_namev(c11_sv);
 /// Convert a name to a `c11_sv`.
 PK_API c11_sv py_name2sv(py_Name);
 
-#define py_ismagicname(name) (name <= __missing__)
-
-/************* Meta Operations *************/
-
-/// Create a new type.
-/// @param name name of the type.
-/// @param base base type.
-/// @param module module where the type is defined. Use `NULL` for built-in types.
-/// @param dtor destructor function. Use `NULL` if not needed.
-PK_API py_Type py_newtype(const char* name, py_Type base, const py_GlobalRef module, py_Dtor dtor);
-
-/// Create a new object.
-/// @param out output reference.
-/// @param type type of the object.
-/// @param slots number of slots. Use `-1` to create a `__dict__`.
-/// @param udsize size of your userdata.
-/// @return pointer to the userdata.
-PK_API void* py_newobject(py_OutRef out, py_Type type, int slots, int udsize);
-
-/************* Type Cast *************/
-
-/// Convert an `int` object in python to `int64_t`.
-PK_API py_i64 py_toint(py_Ref);
-/// Convert a `float` object in python to `double`.
-PK_API py_f64 py_tofloat(py_Ref);
-/// Cast a `int` or `float` object in python to `double`.
-/// If successful, return true and set the value to `out`.
-/// Otherwise, return false and raise `TypeError`.
-PK_API bool py_castfloat(py_Ref, py_f64* out) PY_RAISE;
-/// 32-bit version of `py_castfloat`.
-PK_API bool py_castfloat32(py_Ref, float* out) PY_RAISE;
-/// Cast a `int` object in python to `int64_t`.
-PK_API bool py_castint(py_Ref, py_i64* out) PY_RAISE;
-/// Convert a `bool` object in python to `bool`.
-PK_API bool py_tobool(py_Ref);
-/// Convert a `type` object in python to `py_Type`.
-PK_API py_Type py_totype(py_Ref);
-/// Convert a `str` object in python to null-terminated string.
-PK_API const char* py_tostr(py_Ref);
-/// Convert a `str` object in python to char array.
-PK_API const char* py_tostrn(py_Ref, int* size);
-/// Convert a `str` object in python to `c11_sv`.
-PK_API c11_sv py_tosv(py_Ref);
-/// Convert a `bytes` object in python to char array.
-PK_API unsigned char* py_tobytes(py_Ref, int* size);
-/// Resize a `bytes` object. It can only be resized down.
-PK_API void py_bytes_resize(py_Ref, int size);
-/// Convert a user-defined object to its userdata.
-PK_API void* py_touserdata(py_Ref);
-
-#define py_isint(self) py_istype(self, tp_int)
-#define py_isfloat(self) py_istype(self, tp_float)
-#define py_isbool(self) py_istype(self, tp_bool)
-#define py_isstr(self) py_istype(self, tp_str)
-#define py_islist(self) py_istype(self, tp_list)
-#define py_istuple(self) py_istype(self, tp_tuple)
-#define py_isdict(self) py_istype(self, tp_dict)
-
-#define py_isnil(self) py_istype(self, 0)
-#define py_isnone(self) py_istype(self, tp_NoneType)
-
-/// Get the type of the object.
-PK_API py_Type py_typeof(py_Ref self);
-/// Get type by module and name. e.g. `py_gettype("time", py_name("struct_time"))`.
-/// Return `0` if not found.
-PK_API py_Type py_gettype(const char* module, py_Name name);
-/// Check if the object is exactly the given type.
-PK_API bool py_istype(py_Ref, py_Type);
-/// Check if the object is an instance of the given type.
-PK_API bool py_isinstance(py_Ref obj, py_Type type);
-/// Check if the derived type is a subclass of the base type.
-PK_API bool py_issubclass(py_Type derived, py_Type base);
-
-/// Get the magic method from the given type only.
-/// The returned reference is always valid. However, its value may be `nil`.
-PK_API py_GlobalRef py_tpgetmagic(py_Type type, py_Name name);
-/// Search the magic method from the given type to the base type.
-/// Return `NULL` if not found.
-PK_API py_GlobalRef py_tpfindmagic(py_Type, py_Name name);
-/// Search the name from the given type to the base type.
-/// Return `NULL` if not found.
-PK_API py_ItemRef py_tpfindname(py_Type, py_Name name);
-
-/// Get the type object of the given type.
-PK_API py_GlobalRef py_tpobject(py_Type type);
-/// Get the type name.
-PK_API const char* py_tpname(py_Type type);
-/// Call a type to create a new instance.
-PK_API bool py_tpcall(py_Type type, int argc, py_Ref argv) PY_RAISE PY_RETURN;
-
-/// Check if the object is an instance of the given type exactly.
-/// Raise `TypeError` if the check fails.
-PK_API bool py_checktype(py_Ref self, py_Type type) PY_RAISE;
-
-/// Check if the object is an instance of the given type or its subclass.
-/// Raise `TypeError` if the check fails.
-PK_API bool py_checkinstance(py_Ref self, py_Type type) PY_RAISE;
-
-#define py_checkint(self) py_checktype(self, tp_int)
-#define py_checkfloat(self) py_checktype(self, tp_float)
-#define py_checkbool(self) py_checktype(self, tp_bool)
-#define py_checkstr(self) py_checktype(self, tp_str)
-
-/************* References *************/
-
-/// Get the i-th register.
-/// All registers are located in a contiguous memory.
-PK_API py_GlobalRef py_getreg(int i);
-/// Set the i-th register.
-PK_API void py_setreg(int i, py_Ref val);
-
-#define py_r0() py_getreg(0)
-#define py_r1() py_getreg(1)
-#define py_r2() py_getreg(2)
-#define py_r3() py_getreg(3)
-#define py_r4() py_getreg(4)
-#define py_r5() py_getreg(5)
-#define py_r6() py_getreg(6)
-#define py_r7() py_getreg(7)
-
-/// Get variable in the `__main__` module.
-PK_API py_ItemRef py_getglobal(py_Name name);
-/// Set variable in the `__main__` module.
-PK_API void py_setglobal(py_Name name, py_Ref val);
-/// Get variable in the `builtins` module.
-PK_API py_ItemRef py_getbuiltin(py_Name name);
-
-/// Equivalent to `*dst = *src`.
-PK_API void py_assign(py_Ref dst, py_Ref src);
-/// Get the last return value.
-PK_API py_GlobalRef py_retval();
-
-/// Get an item from the object's `__dict__`.
-/// Return `NULL` if not found.
-PK_API py_ItemRef py_getdict(py_Ref self, py_Name name);
-/// Set an item to the object's `__dict__`.
-PK_API void py_setdict(py_Ref self, py_Name name, py_Ref val);
-/// Delete an item from the object's `__dict__`.
-/// Return `true` if the deletion is successful.
-PK_API bool py_deldict(py_Ref self, py_Name name);
-/// Prepare an insertion to the object's `__dict__`.
-PK_API py_ItemRef py_emplacedict(py_Ref self, py_Name name);
-/// Apply a function to all items in the object's `__dict__`.
-/// Return `true` if the function is successful for all items.
-/// NOTE: Be careful if `f` modifies the object's `__dict__`.
-PK_API bool
-    py_applydict(py_Ref self, bool (*f)(py_Name name, py_Ref val, void* ctx), void* ctx) PY_RAISE;
-
-/// Get the i-th slot of the object.
-/// The object must have slots and `i` must be in valid range.
-PK_API py_ObjectRef py_getslot(py_Ref self, int i);
-/// Set the i-th slot of the object.
-PK_API void py_setslot(py_Ref self, int i, py_Ref val);
-
-/************* Inspection *************/
-
-/// Get the current `function` object on the stack.
-/// Return `NULL` if not available.
-/// NOTE: This function should be placed at the beginning of your decl-based bindings.
-PK_API py_StackRef py_inspect_currentfunction();
-/// Get the current `module` object where the code is executed.
-/// Return `NULL` if not available.
-PK_API py_GlobalRef py_inspect_currentmodule();
-/// Get the current frame object.
-/// Return `NULL` if not available.
-PK_API py_Frame* py_inspect_currentframe();
 /************* Bindings *************/
 
 /// Bind a function to the object via "decl-based" style.
@@ -592,54 +516,178 @@ PK_API void py_bindfunc(py_Ref obj, const char* name, py_CFunction f);
 /// @param setter setter function. Use `NULL` if not needed.
 PK_API void
     py_bindproperty(py_Type type, const char* name, py_CFunction getter, py_CFunction setter);
+/// Bind a magic method to type.
+PK_API void py_bindmagic(py_Type type, py_Name name, py_CFunction f);
+/// Bind a compile-time function via "decl-based" style.
+PK_API void py_macrobind(const char* sig, py_CFunction f);
+/// Get a compile-time function by name.
+PK_API py_ItemRef py_macroget(py_Name name);
 
-#define py_bindmagic(type, __magic__, f) py_newnativefunc(py_tpgetmagic((type), __magic__), (f))
+/************* Value Cast *************/
 
-#define PY_CHECK_ARGC(n)                                                                           \
-    if(argc != n) return TypeError("expected %d arguments, got %d", n, argc)
+/// Convert an `int` object in python to `int64_t`.
+PK_API py_i64 py_toint(py_Ref);
+/// Get the address of the trivial value object (16 bytes).
+PK_API void* py_totrivial(py_Ref);
+/// Convert a `float` object in python to `double`.
+PK_API py_f64 py_tofloat(py_Ref);
+/// Cast a `int` or `float` object in python to `double`.
+/// If successful, return true and set the value to `out`.
+/// Otherwise, return false and raise `TypeError`.
+PK_API bool py_castfloat(py_Ref, py_f64* out) PY_RAISE;
+/// 32-bit version of `py_castfloat`.
+PK_API bool py_castfloat32(py_Ref, float* out) PY_RAISE;
+/// Cast a `int` object in python to `int64_t`.
+PK_API bool py_castint(py_Ref, py_i64* out) PY_RAISE;
+/// Convert a `bool` object in python to `bool`.
+PK_API bool py_tobool(py_Ref);
+/// Convert a `type` object in python to `py_Type`.
+PK_API py_Type py_totype(py_Ref);
+/// Convert a user-defined object to its userdata.
+PK_API void* py_touserdata(py_Ref);
+/// Convert a `str` object in python to null-terminated string.
+PK_API const char* py_tostr(py_Ref);
+/// Convert a `str` object in python to char array.
+PK_API const char* py_tostrn(py_Ref, int* size);
+/// Convert a `str` object in python to `c11_sv`.
+PK_API c11_sv py_tosv(py_Ref);
+/// Convert a `bytes` object in python to char array.
+PK_API unsigned char* py_tobytes(py_Ref, int* size);
+/// Resize a `bytes` object. It can only be resized down.
+PK_API void py_bytes_resize(py_Ref, int size);
 
-#define PY_CHECK_ARG_TYPE(i, type)                                                                 \
-    if(!py_checktype(py_arg(i), type)) return false
+/************* Type System *************/
 
-#define py_offset(p, i) ((py_Ref)((char*)p + ((i) << 4)))
-#define py_arg(i) py_offset(argv, i)
+/// Create a new type.
+/// @param name name of the type.
+/// @param base base type.
+/// @param module module where the type is defined. Use `NULL` for built-in types.
+/// @param dtor destructor function. Use `NULL` if not needed.
+PK_API py_Type py_newtype(const char* name, py_Type base, const py_GlobalRef module, py_Dtor dtor);
+/// Check if the object is exactly the given type.
+PK_API bool py_istype(py_Ref, py_Type);
+/// Get the type of the object.
+PK_API py_Type py_typeof(py_Ref self);
+/// Check if the object is an instance of the given type.
+PK_API bool py_isinstance(py_Ref obj, py_Type type);
+/// Check if the derived type is a subclass of the base type.
+PK_API bool py_issubclass(py_Type derived, py_Type base);
+/// Get type by module and name. e.g. `py_gettype("time", py_name("struct_time"))`.
+/// Return `0` if not found.
+PK_API py_Type py_gettype(const char* module, py_Name name);
+/// Check if the object is an instance of the given type exactly.
+/// Raise `TypeError` if the check fails.
+PK_API bool py_checktype(py_Ref self, py_Type type) PY_RAISE;
+/// Check if the object is an instance of the given type or its subclass.
+/// Raise `TypeError` if the check fails.
+PK_API bool py_checkinstance(py_Ref self, py_Type type) PY_RAISE;
+/// Get the magic method from the given type only.
+/// Return `nil` if not found.
+PK_API PK_DEPRECATED py_GlobalRef py_tpgetmagic(py_Type type, py_Name name);
+/// Search the magic method from the given type to the base type.
+/// Return `NULL` if not found.
+PK_API py_GlobalRef py_tpfindmagic(py_Type, py_Name name);
+/// Search the name from the given type to the base type.
+/// Return `NULL` if not found.
+PK_API py_ItemRef py_tpfindname(py_Type, py_Name name);
+/// Get the base type of the given type.
+PK_API py_Type py_tpbase(py_Type type);
+/// Get the type object of the given type.
+PK_API py_GlobalRef py_tpobject(py_Type type);
+/// Get the type name.
+PK_API const char* py_tpname(py_Type type);
+/// Disable the type for subclassing.
+PK_API void py_tpsetfinal(py_Type type);
+/// Set attribute hooks for the given type.
+PK_API void py_tphookattributes(py_Type type,
+                                bool (*getattribute)(py_Ref self, py_Name name) PY_RAISE PY_RETURN,
+                                bool (*setattribute)(py_Ref self, py_Name name, py_Ref val)
+                                    PY_RAISE PY_RETURN,
+                                bool (*delattribute)(py_Ref self, py_Name name) PY_RAISE,
+                                bool (*getunboundmethod)(py_Ref self, py_Name name) PY_RETURN);
 
-/************* Python Equivalents *************/
+#define py_isint(self) py_istype(self, tp_int)
+#define py_isfloat(self) py_istype(self, tp_float)
+#define py_isbool(self) py_istype(self, tp_bool)
+#define py_isstr(self) py_istype(self, tp_str)
+#define py_islist(self) py_istype(self, tp_list)
+#define py_istuple(self) py_istype(self, tp_tuple)
+#define py_isdict(self) py_istype(self, tp_dict)
+#define py_isnil(self) py_istype(self, 0)
+#define py_isnone(self) py_istype(self, tp_NoneType)
 
-/// Python equivalent to `getattr(self, name)`.
-PK_API bool py_getattr(py_Ref self, py_Name name) PY_RAISE PY_RETURN;
-/// Python equivalent to `setattr(self, name, val)`.
-PK_API bool py_setattr(py_Ref self, py_Name name, py_Ref val) PY_RAISE;
-/// Python equivalent to `delattr(self, name)`.
-PK_API bool py_delattr(py_Ref self, py_Name name) PY_RAISE;
-/// Python equivalent to `self[key]`.
-PK_API bool py_getitem(py_Ref self, py_Ref key) PY_RAISE PY_RETURN;
-/// Python equivalent to `self[key] = val`.
-PK_API bool py_setitem(py_Ref self, py_Ref key, py_Ref val) PY_RAISE;
-/// Python equivalent to `del self[key]`.
-PK_API bool py_delitem(py_Ref self, py_Ref key) PY_RAISE;
+#define py_checkint(self) py_checktype(self, tp_int)
+#define py_checkfloat(self) py_checktype(self, tp_float)
+#define py_checkbool(self) py_checktype(self, tp_bool)
+#define py_checkstr(self) py_checktype(self, tp_str)
 
-/// Perform a binary operation.
-/// The result will be set to `py_retval()`.
-/// The stack remains unchanged after the operation.
-PK_API bool py_binaryop(py_Ref lhs, py_Ref rhs, py_Name op, py_Name rop) PY_RAISE PY_RETURN;
+/************* Inspection *************/
 
-#define py_binaryadd(lhs, rhs) py_binaryop(lhs, rhs, __add__, __radd__)
-#define py_binarysub(lhs, rhs) py_binaryop(lhs, rhs, __sub__, __rsub__)
-#define py_binarymul(lhs, rhs) py_binaryop(lhs, rhs, __mul__, __rmul__)
-#define py_binarytruediv(lhs, rhs) py_binaryop(lhs, rhs, __truediv__, __rtruediv__)
-#define py_binaryfloordiv(lhs, rhs) py_binaryop(lhs, rhs, __floordiv__, __rfloordiv__)
-#define py_binarymod(lhs, rhs) py_binaryop(lhs, rhs, __mod__, __rmod__)
-#define py_binarypow(lhs, rhs) py_binaryop(lhs, rhs, __pow__, __rpow__)
+/// Get the current `function` object on the stack.
+/// Return `NULL` if not available.
+/// NOTE: This function should be placed at the beginning of your decl-based bindings.
+PK_API py_StackRef py_inspect_currentfunction();
+/// Get the current `module` object where the code is executed.
+/// Return `NULL` if not available.
+PK_API py_GlobalRef py_inspect_currentmodule();
+/// Get the current frame object.
+/// Return `NULL` if not available.
+PK_API py_Frame* py_inspect_currentframe();
+/// Python equivalent to `globals()`.
+PK_API void py_newglobals(py_OutRef);
+/// Python equivalent to `locals()`.
+PK_API void py_newlocals(py_OutRef);
 
-#define py_binarylshift(lhs, rhs) py_binaryop(lhs, rhs, __lshift__, 0)
-#define py_binaryrshift(lhs, rhs) py_binaryop(lhs, rhs, __rshift__, 0)
-#define py_binaryand(lhs, rhs) py_binaryop(lhs, rhs, __and__, 0)
-#define py_binaryor(lhs, rhs) py_binaryop(lhs, rhs, __or__, 0)
-#define py_binaryxor(lhs, rhs) py_binaryop(lhs, rhs, __xor__, 0)
-#define py_binarymatmul(lhs, rhs) py_binaryop(lhs, rhs, __matmul__, 0)
+/************* Dict & Slots *************/
 
-/************* Stack Operations *************/
+/// Get the i-th register.
+/// All registers are located in a contiguous memory.
+PK_API py_GlobalRef py_getreg(int i);
+/// Set the i-th register.
+PK_API void py_setreg(int i, py_Ref val);
+/// Get the last return value.
+/// Please note that `py_retval()` cannot be used as input argument.
+PK_API py_GlobalRef py_retval();
+
+#define py_r0() py_getreg(0)
+#define py_r1() py_getreg(1)
+#define py_r2() py_getreg(2)
+#define py_r3() py_getreg(3)
+#define py_r4() py_getreg(4)
+#define py_r5() py_getreg(5)
+#define py_r6() py_getreg(6)
+#define py_r7() py_getreg(7)
+
+/// Get an item from the object's `__dict__`.
+/// Return `NULL` if not found.
+PK_API py_ItemRef py_getdict(py_Ref self, py_Name name);
+/// Set an item to the object's `__dict__`.
+PK_API void py_setdict(py_Ref self, py_Name name, py_Ref val);
+/// Delete an item from the object's `__dict__`.
+/// Return `true` if the deletion is successful.
+PK_API bool py_deldict(py_Ref self, py_Name name);
+/// Prepare an insertion to the object's `__dict__`.
+PK_API py_ItemRef py_emplacedict(py_Ref self, py_Name name);
+/// Apply a function to all items in the object's `__dict__`.
+/// Return `true` if the function is successful for all items.
+/// NOTE: Be careful if `f` modifies the object's `__dict__`.
+PK_API bool
+    py_applydict(py_Ref self, bool (*f)(py_Name name, py_Ref val, void* ctx), void* ctx) PY_RAISE;
+/// Clear the object's `__dict__`. This function is dangerous.
+PK_API void py_cleardict(py_Ref self);
+/// Get the i-th slot of the object.
+/// The object must have slots and `i` must be in valid range.
+PK_API py_ObjectRef py_getslot(py_Ref self, int i);
+/// Set the i-th slot of the object.
+PK_API void py_setslot(py_Ref self, int i, py_Ref val);
+/// Get variable in the `builtins` module.
+PK_API py_ItemRef py_getbuiltin(py_Name name);
+/// Get variable in the `__main__` module.
+PK_API py_ItemRef py_getglobal(py_Name name);
+/// Set variable in the `__main__` module.
+PK_API void py_setglobal(py_Name name, py_Ref val);
+
+/************* Stack Ops *************/
 
 /// Get the i-th object from the top of the stack.
 /// `i` should be negative, e.g. (-1) means TOS.
@@ -663,6 +711,9 @@ PK_API py_StackRef py_pushtmp();
 /// If return true:  `[self] -> [unbound, self]`.
 /// If return false: `[self] -> [self]` (no change).
 PK_API bool py_pushmethod(py_Name name);
+/// Evaluate an expression and push the result to the stack.
+/// This function is used for testing.
+PK_API bool py_pusheval(const char* expr, py_GlobalRef module) PY_RAISE;
 /// Call a callable object via pocketpy's calling convention.
 /// You need to prepare the stack using the following format:
 /// `callable, self/nil, arg1, arg2, ..., k1, v1, k2, v2, ...`.
@@ -671,50 +722,155 @@ PK_API bool py_pushmethod(py_Name name);
 /// The result will be set to `py_retval()`.
 /// The stack size will be reduced by `2 + argc + kwargc * 2`.
 PK_API bool py_vectorcall(uint16_t argc, uint16_t kwargc) PY_RAISE PY_RETURN;
-/// Evaluate an expression and push the result to the stack.
-/// This function is used for testing.
-PK_API bool py_pusheval(const char* expr, py_GlobalRef module) PY_RAISE;
+/// Call a function.
+/// It prepares the stack and then performs a `vectorcall(argc, 0, false)`.
+/// The result will be set to `py_retval()`.
+/// The stack remains unchanged if successful.
+PK_API bool py_call(py_Ref f, int argc, py_Ref argv) PY_RAISE PY_RETURN;
+/// Call a type to create a new instance.
+PK_API bool py_tpcall(py_Type type, int argc, py_Ref argv) PY_RAISE PY_RETURN;
 
-/************* Modules *************/
+#ifndef NDEBUG
+/// Call a `py_CFunction` in a safe way.
+/// This function does extra checks to help you debug `py_CFunction`.
+PK_API bool py_callcfunc(py_CFunction f, int argc, py_Ref argv) PY_RAISE PY_RETURN;
+#else
+#define py_callcfunc(f, argc, argv) (f((argc), (argv)))
+#endif
 
-/// Create a new module.
-PK_API py_GlobalRef py_newmodule(const char* path);
+#define PY_CHECK_ARGC(n)                                                                           \
+    if(argc != n) return TypeError("expected %d arguments, got %d", n, argc)
+
+#define PY_CHECK_ARG_TYPE(i, type)                                                                 \
+    if(!py_checktype(py_arg(i), type)) return false
+
+#define py_offset(p, i) ((p) + (i))
+#define py_arg(i) (&argv[i])
+#define py_assign(dst, src) *(dst) = *(src)
+
+/// Perform a binary operation.
+/// The result will be set to `py_retval()`.
+/// The stack remains unchanged after the operation.
+PK_API bool py_binaryop(py_Ref lhs, py_Ref rhs, py_Name op, py_Name rop) PY_RAISE PY_RETURN;
+
+/************* Python Ops *************/
+
+/// lhs + rhs
+PK_API bool py_binaryadd(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs - rhs
+PK_API bool py_binarysub(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs * rhs
+PK_API bool py_binarymul(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs / rhs
+PK_API bool py_binarytruediv(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs // rhs
+PK_API bool py_binaryfloordiv(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs % rhs
+PK_API bool py_binarymod(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs ** rhs
+PK_API bool py_binarypow(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs << rhs
+PK_API bool py_binarylshift(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs >> rhs
+PK_API bool py_binaryrshift(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs & rhs
+PK_API bool py_binaryand(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs | rhs
+PK_API bool py_binaryor(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs ^ rhs
+PK_API bool py_binaryxor(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs @ rhs
+PK_API bool py_binarymatmul(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs == rhs
+PK_API bool py_eq(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs != rhs
+PK_API bool py_ne(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs < rhs
+PK_API bool py_lt(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs <= rhs
+PK_API bool py_le(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs > rhs
+PK_API bool py_gt(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+/// lhs >= rhs
+PK_API bool py_ge(py_Ref lhs, py_Ref rhs) PY_RAISE PY_RETURN;
+
+/// Python equivalent to `lhs is rhs`.
+PK_API bool py_isidentical(py_Ref, py_Ref);
+/// Python equivalent to `bool(val)`.
+/// 1: true, 0: false, -1: error
+PK_API int py_bool(py_Ref val) PY_RAISE;
+/// Compare two objects.
+/// 1: lhs == rhs, 0: lhs != rhs, -1: error
+PK_API int py_equal(py_Ref lhs, py_Ref rhs) PY_RAISE;
+/// Compare two objects.
+/// 1: lhs < rhs, 0: lhs >= rhs, -1: error
+PK_API int py_less(py_Ref lhs, py_Ref rhs) PY_RAISE;
+/// Python equivalent to `callable(val)`.
+PK_API bool py_callable(py_Ref val);
+/// Get the hash value of the object.
+PK_API bool py_hash(py_Ref, py_i64* out) PY_RAISE;
+/// Get the iterator of the object.
+PK_API bool py_iter(py_Ref) PY_RAISE PY_RETURN;
+/// Get the next element from the iterator.
+/// 1: success, 0: StopIteration, -1: error
+PK_API int py_next(py_Ref) PY_RAISE PY_RETURN;
+/// Python equivalent to `str(val)`.
+PK_API bool py_str(py_Ref val) PY_RAISE PY_RETURN;
+/// Python equivalent to `repr(val)`.
+PK_API bool py_repr(py_Ref val) PY_RAISE PY_RETURN;
+/// Python equivalent to `len(val)`.
+PK_API bool py_len(py_Ref val) PY_RAISE PY_RETURN;
+
+/// Python equivalent to `getattr(self, name)`.
+PK_API bool py_getattr(py_Ref self, py_Name name) PY_RAISE PY_RETURN;
+/// Python equivalent to `setattr(self, name, val)`.
+PK_API bool py_setattr(py_Ref self, py_Name name, py_Ref val) PY_RAISE;
+/// Python equivalent to `delattr(self, name)`.
+PK_API bool py_delattr(py_Ref self, py_Name name) PY_RAISE;
+/// Python equivalent to `self[key]`.
+PK_API bool py_getitem(py_Ref self, py_Ref key) PY_RAISE PY_RETURN;
+/// Python equivalent to `self[key] = val`.
+PK_API bool py_setitem(py_Ref self, py_Ref key, py_Ref val) PY_RAISE;
+/// Python equivalent to `del self[key]`.
+PK_API bool py_delitem(py_Ref self, py_Ref key) PY_RAISE;
+
+/************* Module System *************/
+
 /// Get a module by path.
 PK_API py_GlobalRef py_getmodule(const char* path);
+/// Create a new module.
+PK_API py_GlobalRef py_newmodule(const char* path);
 /// Reload an existing module.
-PK_API bool py_importlib_reload(py_GlobalRef module) PY_RAISE PY_RETURN;
-
+PK_API bool py_importlib_reload(py_Ref module) PY_RAISE PY_RETURN;
 /// Import a module.
 /// The result will be set to `py_retval()`.
 /// -1: error, 0: not found, 1: success
 PK_API int py_import(const char* path) PY_RAISE PY_RETURN;
 
-/************* Errors *************/
+/************* PyException *************/
 
+/// Check if there is an unhandled exception.
+PK_API bool py_checkexc();
+/// Check if the unhandled exception is an instance of the given type.
+/// If match, the exception will be stored in `py_retval()`.
+PK_API bool py_matchexc(py_Type type) PY_RETURN;
+/// Clear the unhandled exception.
+/// @param p0 the unwinding point. Use `NULL` if not needed.
+PK_API void py_clearexc(py_StackRef p0);
+/// Print the unhandled exception.
+PK_API void py_printexc();
+/// Format the unhandled exception and return a null-terminated string.
+/// The returned string should be freed by the caller.
+PK_API char* py_formatexc();
 /// Raise an exception by type and message. Always return false.
 PK_API bool py_exception(py_Type type, const char* fmt, ...) PY_RAISE;
 /// Raise an exception object. Always return false.
 PK_API bool py_raise(py_Ref) PY_RAISE;
-/// Print the current exception.
-/// The exception will be set as handled.
-PK_API void py_printexc();
-/// Format the current exception and return a null-terminated string.
-/// The result should be freed by the caller.
-/// The exception will be set as handled.
-PK_API char* py_formatexc();
-/// Check if an exception is raised.
-PK_API bool py_checkexc(bool ignore_handled);
-/// Check if the exception is an instance of the given type.
-/// This function is roughly equivalent to python's `except <T> as e:` block.
-/// If match, the exception will be stored in `py_retval()` as handled.
-PK_API bool py_matchexc(py_Type type) PY_RETURN;
-/// Clear the current exception.
-/// @param p0 the unwinding point. Use `NULL` if not needed.
-PK_API void py_clearexc(py_StackRef p0);
 
 #define NameError(n) py_exception(tp_NameError, "name '%n' is not defined", (n))
 #define TypeError(...) py_exception(tp_TypeError, __VA_ARGS__)
 #define RuntimeError(...) py_exception(tp_RuntimeError, __VA_ARGS__)
+#define TimeoutError(...) py_exception(tp_TimeoutError, __VA_ARGS__)
 #define OSError(...) py_exception(tp_OSError, __VA_ARGS__)
 #define ValueError(...) py_exception(tp_ValueError, __VA_ARGS__)
 #define IndexError(...) py_exception(tp_IndexError, __VA_ARGS__)
@@ -727,74 +883,40 @@ PK_API void py_clearexc(py_StackRef p0);
                  "cannot access local variable '%n' where it is not associated with a value",      \
                  (n))
 
-PK_API bool StopIteration() PY_RAISE;
 PK_API bool KeyError(py_Ref key) PY_RAISE;
+PK_API bool StopIteration() PY_RAISE;
 
-/************* Operators *************/
+/************* Debugger *************/
 
-/// Python equivalent to `bool(val)`.
-/// 1: true, 0: false, -1: error
-PK_API int py_bool(py_Ref val) PY_RAISE;
-/// Compare two objects.
-/// 1: lhs == rhs, 0: lhs != rhs, -1: error
-PK_API int py_equal(py_Ref lhs, py_Ref rhs) PY_RAISE;
-/// Compare two objects.
-/// 1: lhs < rhs, 0: lhs >= rhs, -1: error
-PK_API int py_less(py_Ref lhs, py_Ref rhs) PY_RAISE;
-
-#define py_eq(lhs, rhs) py_binaryop(lhs, rhs, __eq__, __eq__)
-#define py_ne(lhs, rhs) py_binaryop(lhs, rhs, __ne__, __ne__)
-#define py_lt(lhs, rhs) py_binaryop(lhs, rhs, __lt__, __gt__)
-#define py_le(lhs, rhs) py_binaryop(lhs, rhs, __le__, __ge__)
-#define py_gt(lhs, rhs) py_binaryop(lhs, rhs, __gt__, __lt__)
-#define py_ge(lhs, rhs) py_binaryop(lhs, rhs, __ge__, __le__)
-
-/// Python equivalent to `callable(val)`.
-PK_API bool py_callable(py_Ref val);
-/// Get the hash value of the object.
-PK_API bool py_hash(py_Ref, py_i64* out) PY_RAISE;
-/// Get the iterator of the object.
-PK_API bool py_iter(py_Ref) PY_RAISE PY_RETURN;
-/// Get the next element from the iterator.
-/// 1: success, 0: StopIteration, -1: error
-PK_API int py_next(py_Ref) PY_RAISE PY_RETURN;
-/// Python equivalent to `lhs is rhs`.
-PK_API bool py_isidentical(py_Ref, py_Ref);
-/// Call a function.
-/// It prepares the stack and then performs a `vectorcall(argc, 0, false)`.
-/// The result will be set to `py_retval()`.
-/// The stack remains unchanged if successful.
-PK_API bool py_call(py_Ref f, int argc, py_Ref argv) PY_RAISE PY_RETURN;
-
-#ifndef NDEBUG
-/// Call a `py_CFunction` in a safe way.
-/// This function does extra checks to help you debug `py_CFunction`.
-PK_API bool py_callcfunc(py_CFunction f, int argc, py_Ref argv) PY_RAISE PY_RETURN;
+#if PK_ENABLE_OS
+PK_API void py_debugger_waitforattach(const char* hostname, unsigned short port);
+PK_API int py_debugger_status();
+PK_API void py_debugger_exceptionbreakpoint(py_Ref exc);
+PK_API void py_debugger_exit(int code);
 #else
-#define py_callcfunc(f, argc, argv) (f((argc), (argv)))
+#define py_debugger_waitforattach(hostname, port)
+#define py_debugger_status() 0
+#define py_debugger_exceptionbreakpoint(exc)
+#define py_debugger_exit(code)
 #endif
 
-/// Python equivalent to `str(val)`.
-PK_API bool py_str(py_Ref val) PY_RAISE PY_RETURN;
-/// Python equivalent to `repr(val)`.
-PK_API bool py_repr(py_Ref val) PY_RAISE PY_RETURN;
-/// Python equivalent to `len(val)`.
-PK_API bool py_len(py_Ref val) PY_RAISE PY_RETURN;
-/// Python equivalent to `json.dumps(val)`.
-PK_API bool py_json_dumps(py_Ref val, int indent) PY_RAISE PY_RETURN;
-/// Python equivalent to `json.loads(val)`.
-PK_API bool py_json_loads(const char* source) PY_RAISE PY_RETURN;
-/// Python equivalent to `pickle.dumps(val)`.
-PK_API bool py_pickle_dumps(py_Ref val) PY_RAISE PY_RETURN;
-/// Python equivalent to `pickle.loads(val)`.
-PK_API bool py_pickle_loads(const unsigned char* data, int size) PY_RAISE PY_RETURN;
-/************* Unchecked Functions *************/
+/************* PyTuple *************/
 
+/// Create a `tuple` with `n` UNINITIALIZED elements.
+/// You should initialize all elements before using it.
+PK_API py_ObjectRef py_newtuple(py_OutRef, int n);
 PK_API py_ObjectRef py_tuple_data(py_Ref self);
 PK_API py_ObjectRef py_tuple_getitem(py_Ref self, int i);
 PK_API void py_tuple_setitem(py_Ref self, int i, py_Ref val);
 PK_API int py_tuple_len(py_Ref self);
 
+/************* PyList *************/
+
+/// Create an empty `list`.
+PK_API void py_newlist(py_OutRef);
+/// Create a `list` with `n` UNINITIALIZED elements.
+/// You should initialize all elements before using it.
+PK_API void py_newlistn(py_OutRef, int n);
 PK_API py_ItemRef py_list_data(py_Ref self);
 PK_API py_ItemRef py_list_getitem(py_Ref self, int i);
 PK_API void py_list_setitem(py_Ref self, int i, py_Ref val);
@@ -806,6 +928,10 @@ PK_API py_ItemRef py_list_emplace(py_Ref self);
 PK_API void py_list_clear(py_Ref self);
 PK_API void py_list_insert(py_Ref self, int i, py_Ref val);
 
+/************* PyDict *************/
+
+/// Create an empty `dict`.
+PK_API void py_newdict(py_OutRef);
 /// -1: error, 0: not found, 1: found
 PK_API int py_dict_getitem(py_Ref self, py_Ref key) PY_RAISE PY_RETURN;
 /// true: success, false: error
@@ -832,17 +958,67 @@ PK_API bool
 /// noexcept
 PK_API int py_dict_len(py_Ref self);
 
-/************* linalg module *************/
-void py_newvec2(py_OutRef out, c11_vec2);
-void py_newvec3(py_OutRef out, c11_vec3);
-void py_newvec2i(py_OutRef out, c11_vec2i);
-void py_newvec3i(py_OutRef out, c11_vec3i);
-c11_mat3x3* py_newmat3x3(py_OutRef out);
-c11_vec2 py_tovec2(py_Ref self);
-c11_vec3 py_tovec3(py_Ref self);
-c11_vec2i py_tovec2i(py_Ref self);
-c11_vec3i py_tovec3i(py_Ref self);
-c11_mat3x3* py_tomat3x3(py_Ref self);
+/************* PySlice *************/
+
+/// Create an UNINITIALIZED `slice` object.
+/// You should use `py_setslot()` to set `start`, `stop`, and `step`.
+PK_API py_ObjectRef py_newslice(py_OutRef);
+/// Create a `slice` object from 3 integers.
+PK_API void py_newsliceint(py_OutRef out, py_i64 start, py_i64 stop, py_i64 step);
+
+/************* random module *************/
+PK_API void py_newRandom(py_OutRef out);
+PK_API void py_Random_seed(py_Ref self, py_i64 seed);
+PK_API py_f64 py_Random_random(py_Ref self);
+PK_API py_f64 py_Random_uniform(py_Ref self, py_f64 a, py_f64 b);
+PK_API py_i64 py_Random_randint(py_Ref self, py_i64 a, py_i64 b);
+
+/************* array2d module *************/
+PK_API void py_newarray2d(py_OutRef out, int width, int height);
+PK_API int py_array2d_getwidth(py_Ref self);
+PK_API int py_array2d_getheight(py_Ref self);
+PK_API py_ObjectRef py_array2d_getitem(py_Ref self, int x, int y);
+PK_API void py_array2d_setitem(py_Ref self, int x, int y, py_Ref val);
+
+/************* vmath module *************/
+PK_API void py_newvec2(py_OutRef out, c11_vec2);
+PK_API void py_newvec3(py_OutRef out, c11_vec3);
+PK_API void py_newvec2i(py_OutRef out, c11_vec2i);
+PK_API void py_newvec3i(py_OutRef out, c11_vec3i);
+PK_API void py_newcolor32(py_OutRef out, c11_color32);
+PK_API c11_mat3x3* py_newmat3x3(py_OutRef out);
+PK_API c11_vec2 py_tovec2(py_Ref self);
+PK_API c11_vec3 py_tovec3(py_Ref self);
+PK_API c11_vec2i py_tovec2i(py_Ref self);
+PK_API c11_vec3i py_tovec3i(py_Ref self);
+PK_API c11_mat3x3* py_tomat3x3(py_Ref self);
+PK_API c11_color32 py_tocolor32(py_Ref self);
+
+/************* json module *************/
+/// Python equivalent to `json.dumps(val)`.
+PK_API bool py_json_dumps(py_Ref val, int indent) PY_RAISE PY_RETURN;
+/// Python equivalent to `json.loads(val)`.
+PK_API bool py_json_loads(const char* source) PY_RAISE PY_RETURN;
+
+/************* pickle module *************/
+/// Python equivalent to `pickle.dumps(val)`.
+PK_API bool py_pickle_dumps(py_Ref val) PY_RAISE PY_RETURN;
+/// Python equivalent to `pickle.loads(val)`.
+PK_API bool py_pickle_loads(const unsigned char* data, int size) PY_RAISE PY_RETURN;
+
+/************* pkpy module *************/
+/// Begin the watchdog with `timeout` in milliseconds.
+/// `PK_ENABLE_WATCHDOG` must be defined to `1` to use this feature.
+/// You need to call `py_watchdog_end()` later.
+/// If `timeout` is reached, `TimeoutError` will be raised.
+PK_API void py_watchdog_begin(py_i64 timeout);
+/// Reset the watchdog.
+PK_API void py_watchdog_end();
+
+PK_API void py_profiler_begin();
+PK_API void py_profiler_end();
+PK_API void py_profiler_reset();
+PK_API char* py_profiler_report();
 
 /************* Others *************/
 
@@ -861,79 +1037,6 @@ PK_API int py_replinput(char* buf, int max_size);
 /// %t: py_Type
 /// %n: py_Name
 
-enum py_MagicName {
-    py_MagicName__NULL,  // 0 is reserved
-
-#define MAGIC_METHOD(x) x,
-#ifdef MAGIC_METHOD
-
-// math operators
-MAGIC_METHOD(__lt__)
-MAGIC_METHOD(__le__)
-MAGIC_METHOD(__gt__)
-MAGIC_METHOD(__ge__)
-/////////////////////////////
-MAGIC_METHOD(__neg__)
-MAGIC_METHOD(__abs__)
-MAGIC_METHOD(__round__)
-MAGIC_METHOD(__divmod__)
-/////////////////////////////
-MAGIC_METHOD(__add__)
-MAGIC_METHOD(__radd__)
-MAGIC_METHOD(__sub__)
-MAGIC_METHOD(__rsub__)
-MAGIC_METHOD(__mul__)
-MAGIC_METHOD(__rmul__)
-MAGIC_METHOD(__truediv__)
-MAGIC_METHOD(__rtruediv__)
-MAGIC_METHOD(__floordiv__)
-MAGIC_METHOD(__rfloordiv__)
-MAGIC_METHOD(__mod__)
-MAGIC_METHOD(__rmod__)
-MAGIC_METHOD(__pow__)
-MAGIC_METHOD(__rpow__)
-MAGIC_METHOD(__matmul__)
-MAGIC_METHOD(__lshift__)
-MAGIC_METHOD(__rshift__)
-MAGIC_METHOD(__and__)
-MAGIC_METHOD(__or__)
-MAGIC_METHOD(__xor__)
-/////////////////////////////
-MAGIC_METHOD(__repr__)
-MAGIC_METHOD(__str__)
-MAGIC_METHOD(__hash__)
-MAGIC_METHOD(__len__)
-MAGIC_METHOD(__iter__)
-MAGIC_METHOD(__next__)
-MAGIC_METHOD(__contains__)
-MAGIC_METHOD(__bool__)
-MAGIC_METHOD(__invert__)
-/////////////////////////////
-MAGIC_METHOD(__eq__)
-MAGIC_METHOD(__ne__)
-// indexer
-MAGIC_METHOD(__getitem__)
-MAGIC_METHOD(__setitem__)
-MAGIC_METHOD(__delitem__)
-// specials
-MAGIC_METHOD(__new__)
-MAGIC_METHOD(__init__)
-MAGIC_METHOD(__call__)
-MAGIC_METHOD(__enter__)
-MAGIC_METHOD(__exit__)
-MAGIC_METHOD(__name__)
-MAGIC_METHOD(__all__)
-MAGIC_METHOD(__package__)
-MAGIC_METHOD(__path__)
-MAGIC_METHOD(__class__)
-MAGIC_METHOD(__getattr__)
-MAGIC_METHOD(__reduce__)
-MAGIC_METHOD(__missing__)
-
-#endif
-#undef MAGIC_METHOD
-};
-
 enum py_PredefinedType {
     tp_nil = 0,
     tp_object = 1,
@@ -943,29 +1046,30 @@ enum py_PredefinedType {
     tp_bool,
     tp_str,
     tp_str_iterator,
-    tp_list,   // c11_vector
-    tp_tuple,  // N slots
-    tp_array_iterator,
-    tp_slice,  // 3 slots (start, stop, step)
+    tp_list,            // c11_vector
+    tp_tuple,           // N slots
+    tp_list_iterator,   // 1 slot
+    tp_tuple_iterator,  // 1 slot
+    tp_slice,           // 3 slots (start, stop, step)
     tp_range,
     tp_range_iterator,
     tp_module,
     tp_function,
     tp_nativefunc,
-    tp_boundmethod,    // 2 slots (self, func)
-    tp_super,          // 1 slot + py_Type
-    tp_BaseException,  // 2 slots (arg + inner_exc)
+    tp_boundmethod,  // 2 slots (self, func)
+    tp_super,        // 1 slot + py_Type
+    tp_BaseException,
     tp_Exception,
     tp_bytes,
     tp_namedict,
     tp_locals,
     tp_code,
     tp_dict,
-    tp_dict_items,    // 1 slot
-    tp_property,      // 2 slots (getter + setter)
-    tp_star_wrapper,  // 1 slot + int level
-    tp_staticmethod,  // 1 slot
-    tp_classmethod,   // 1 slot
+    tp_dict_iterator,  // 1 slot
+    tp_property,       // 2 slots (getter + setter)
+    tp_star_wrapper,   // 1 slot + int level
+    tp_staticmethod,   // 1 slot
+    tp_classmethod,    // 1 slot
     tp_NoneType,
     tp_NotImplementedType,
     tp_ellipsis,
@@ -982,6 +1086,7 @@ enum py_PredefinedType {
     tp_IndexError,
     tp_ValueError,
     tp_RuntimeError,
+    tp_TimeoutError,
     tp_ZeroDivisionError,
     tp_NameError,
     tp_UnboundLocalError,
@@ -989,12 +1094,13 @@ enum py_PredefinedType {
     tp_ImportError,
     tp_AssertionError,
     tp_KeyError,
-    /* linalg */
+    /* vmath */
     tp_vec2,
     tp_vec3,
     tp_vec2i,
     tp_vec3i,
     tp_mat3x3,
+    tp_color32,
     /* array2d */
     tp_array2d_like,
     tp_array2d_like_iterator,

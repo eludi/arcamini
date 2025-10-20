@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG
+CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG -DPK_IS_PUBLIC_INCLUDE 
 
 SDL						= ../SDL2
 INCDIR					= -I$(SDL)/include -D_REENTRANT -Iexternal -Iexternal/arcajs
