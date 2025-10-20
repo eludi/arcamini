@@ -98,6 +98,16 @@
 				"returnType": null,
 				"description": "Sets the line width for drawLine and drawRect"
 			},
+			{ "function":"clipRect",
+				"parameters": [
+					{ "name":"x", "type":"float", "description": "the horizontal position of the clipping rectangle's upper left corner" },
+					{ "name":"y", "type":"float", "description": "the vertical position of the clipping rectangle's upper left corner" },
+					{ "name":"w", "type":"float", "description": "the width of the clipping rectangle" },
+					{ "name":"h", "type":"float", "description": "the height of the clipping rectangle" }
+				],
+				"returnType": null,
+				"description": "Sets the clipping viewport for all subsequent draw calls in screen space. Default is (0,0,width,height) of the window. Use negative width/height to disable clipping."
+			},
 			{ "function":"fillRect",
 				"parameters": [
 					{ "name":"x", "type":"float", "description": "the horizontal position of the rectangle's upper left corner" },

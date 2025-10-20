@@ -20,6 +20,8 @@ extern void WindowClearColor(uint32_t color);
 extern void gfxColor(uint32_t color);
 /// sets current line width
 extern void gfxLineWidth(float w);
+/// sets viewport / clipping rectangle (in screen coordinates), use negative width/height to disable clipping
+extern void gfxClipRect(int x, int y, int w, int h);
 /// draws a rectangle outline
 extern void gfxDrawRect(float x, float y, float w, float h);
 /// draws a filled rectangle

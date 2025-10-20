@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG -DPK_IS_PUBLIC_INCLUDE 
+CFLAGS = -Wall -Wpedantic -Wno-overlength-strings -O3 -DNDEBUG
 
 SDL						= ../SDL2
 INCDIR					= -I$(SDL)/include -D_REENTRANT -Iexternal -Iexternal/arcajs
@@ -78,12 +78,14 @@ $(LIB) : $(SRCLIB)
 	$(CC) $(INCDIR) $(CFLAGS) -shared -o $@ $^ $(SHLIBS) -s
 
 arcapy.o: arcapy.c bindings.h pkpy_debug.h arcamini.h
+arcapy.o: CFLAGS += -DPK_IS_PUBLIC_INCLUDE
 arcaqjs.o: arcaqjs.c arcamini.h bindings.h qjs_debug.h
 arcalua.o: arcalua.c external/minilua.h bindings.h arcamini.h arcalua_debug.h
 arcamini.o: arcamini.c arcamini.h
 external/pocketpy.o: external/pocketpy.c external/pocketpy.h
 bindings_arcalua.o: bindings.h bindings_arcalua.c external/minilua.h arcamini.h
 bindings_arcapy.o: bindings.h bindings_arcapy.c external/pocketpy.h arcamini.h
+bindings_arcapy.o: CFLAGS += -DPK_IS_PUBLIC_INCLUDE
 bindings_arcaqjs.o: bindings.h bindings_arcaqjs.c arcamini.h
 
 # generic rules and targets:

@@ -396,6 +396,17 @@ static JSValue js_gfxLineWidth(JSContext *ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
+static JSValue js_gfxClipRect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    int32_t x,y,w,h;
+    if (JS_ToInt32(ctx, &x, argv[0]) ||
+        JS_ToInt32(ctx, &y, argv[1]) ||
+        JS_ToInt32(ctx, &w, argv[2]) ||
+        JS_ToInt32(ctx, &h, argv[3]))
+        return JS_ThrowTypeError(ctx, "gfx.clipRect expects 4 integers");
+    gfxClipRect(x,y,w,h);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gfxDrawRect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     double x,y,w,h;
     if (JS_ToFloat64(ctx, &x, argv[0]) ||
@@ -462,6 +473,7 @@ static JSValue js_gfxFillTextAlign(JSContext *ctx, JSValueConst this_val, int ar
 static const JSCFunctionListEntry js_gfx_funcs[] = {
     JS_CFUNC_DEF("color", 1, js_gfxColor),
     JS_CFUNC_DEF("lineWidth", 1, js_gfxLineWidth),
+    JS_CFUNC_DEF("clipRect", 4, js_gfxClipRect),
     JS_CFUNC_DEF("drawRect", 4, js_gfxDrawRect),
     JS_CFUNC_DEF("fillRect", 4, js_gfxFillRect),
     JS_CFUNC_DEF("drawLine", 4, js_gfxDrawLine),

@@ -201,11 +201,12 @@ _lib.gfxDrawBatch.restype = None
 # --- Opcodes (must match C enum) ---
 OP_COLOR      = 1
 OP_LINEWIDTH  = 2
-OP_FILLRECT   = 3
-OP_DRAWRECT   = 4
-OP_DRAWLINE   = 5
-OP_DRAWIMAGE  = 6
-OP_FILLTEXT   = 7
+OP_CLIPRECT   = 3
+OP_FILLRECT   = 4
+OP_DRAWRECT   = 5
+OP_DRAWLINE   = 6
+OP_DRAWIMAGE  = 7
+OP_FILLTEXT   = 8
 
 class Gfx:
     """arcamini graphics context"""
@@ -233,6 +234,9 @@ class Gfx:
 
     def lineWidth(self, w):
         self._emit("f", OP_LINEWIDTH, w)
+
+    def clipRect(self, x, y, w, h):
+        self._emit("iiii", OP_CLIPRECT, x, y, w, h)
 
     def fillRect(self, x, y, w, h):
         self._emit("ffff", OP_FILLRECT, x, y, w, h)

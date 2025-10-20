@@ -95,6 +95,15 @@ static int lua_gfxLineWidth(lua_State *L) {
     return 0;
 }
 
+static int lua_gfxClipRect(lua_State *L) {
+    int x = (int)luaL_checkinteger(L, 1);
+    int y = (int)luaL_checkinteger(L, 2);
+    int w = (int)luaL_checkinteger(L, 3);
+    int h = (int)luaL_checkinteger(L, 4);
+    gfxClipRect(x, y, w, h);
+    return 0;
+}
+
 static int lua_gfxDrawRect(lua_State *L) {
     float x = (float)luaL_checknumber(L, 1);
     float y = (float)luaL_checknumber(L, 2);
@@ -149,6 +158,7 @@ static const luaL_Reg gfx_funcs[] = {
     {"lineWidth", lua_gfxLineWidth},
     {"drawRect", lua_gfxDrawRect},
     {"fillRect", lua_gfxFillRect},
+    {"clipRect", lua_gfxClipRect},
     {"drawLine", lua_gfxDrawLine},
     {"drawImage", lua_gfxDrawImage},
     {"fillText", lua_gfxFillTextAlign},
