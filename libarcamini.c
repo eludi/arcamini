@@ -15,6 +15,9 @@
 enum {
     GFX_OP_COLOR = 1,
     GFX_OP_LINEWIDTH,
+    GFX_OP_TRANSFORM,
+    GFX_OP_SAVE,
+    GFX_OP_RESTORE,
     GFX_OP_CLIPRECT,
     GFX_OP_FILLRECT,
     GFX_OP_DRAWRECT,
@@ -39,6 +42,20 @@ void gfxDrawBatch(const uint8_t* ops, uint32_t ops_len, const char* strings, uin
                 float w;
                 memcpy(&w, p, 4); p += sizeof(w);
                 gfxLineWidth(w);
+            } break;
+            case GFX_OP_TRANSFORM: {
+                float x, y, rot, sc;
+                memcpy(&x, p, 4); p += sizeof(x);
+                memcpy(&y, p, 4); p += sizeof(y);
+                memcpy(&rot, p, 4); p += sizeof(rot);
+                memcpy(&sc, p, 4); p += sizeof(sc);
+                gfxTransform(x, y, rot, sc);
+            } break;
+            case GFX_OP_SAVE: {
+                gfxStateSave();
+            } break;
+            case GFX_OP_RESTORE: {
+                gfxStateRestore();
             } break;
             case GFX_OP_CLIPRECT: {
                 int x, y, w, h;

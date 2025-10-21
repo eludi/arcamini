@@ -91,6 +91,35 @@ static bool py_gfxLineWidth(int argc, py_StackRef argv) {
 	return true;
 }
 
+static bool py_gfxTransform(int argc, py_StackRef argv) {
+	float x, y, rot=0.0f, sc=1.0f;
+	if(!py_castfloat32(py_arg(0), &x) ||
+	   !py_castfloat32(py_arg(1), &y))
+	   return false;
+	if(argc > 2 && !py_castfloat32(py_arg(2), &rot))
+	   return false;
+	if(argc > 3 && !py_castfloat32(py_arg(3), &sc))
+		return false;
+
+	gfxTransform(x, y, rot, sc);
+	py_newnone(py_retval());
+	return true;
+}
+
+static bool py_gfxStateSave(int argc, py_StackRef argv) {
+	(void)argc; (void)argv;
+	gfxStateSave();
+	py_newnone(py_retval());
+	return true;
+}
+
+static bool py_gfxStateRestore(int argc, py_StackRef argv) {
+	(void)argc; (void)argv;
+	gfxStateRestore();
+	py_newnone(py_retval());
+	return true;
+}
+
 static bool py_gfxClipRect(int argc, py_StackRef argv) {
 	int64_t x, y, w, h;
 	if(!py_castint(py_arg(0), &x) ||
@@ -388,6 +417,9 @@ static void bindArcamini() {
 	gfx_ns = py_newmodule("gfx");
 	py_bindfunc(gfx_ns, "color", py_gfxColor);
 	py_bindfunc(gfx_ns, "lineWidth", py_gfxLineWidth);
+	py_bindfunc(gfx_ns, "transform", py_gfxTransform);
+	py_bindfunc(gfx_ns, "save", py_gfxStateSave);
+	py_bindfunc(gfx_ns, "restore", py_gfxStateRestore);
 	py_bindfunc(gfx_ns, "clipRect", py_gfxClipRect);
 	py_bindfunc(gfx_ns, "drawRect", py_gfxDrawRect);
 	py_bindfunc(gfx_ns, "fillRect", py_gfxFillRect);

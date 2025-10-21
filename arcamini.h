@@ -20,6 +20,13 @@ extern void WindowClearColor(uint32_t color);
 extern void gfxColor(uint32_t color);
 /// sets current line width
 extern void gfxLineWidth(float w);
+/// multiplies current transformation with this additional transformation
+extern void gfxTransform(float x, float y, float rot, float sc);
+/// pushes current state onto a stack
+/** 7 stacked states supported */
+extern void gfxStateSave();
+/// restores previous state from stack
+extern void gfxStateRestore();
 /// sets viewport / clipping rectangle (in screen coordinates), use negative width/height to disable clipping
 extern void gfxClipRect(int x, int y, int w, int h);
 /// draws a rectangle outline

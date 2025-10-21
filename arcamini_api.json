@@ -98,6 +98,26 @@
 				"returnType": null,
 				"description": "Sets the line width for drawLine and drawRect"
 			},
+			{ "function":"transform",
+				"parameters": [
+					{ "name":"x", "type":"float", "description": "the translation in horizontal direction" },
+					{ "name":"y", "type":"float", "description": "the translation in vertical direction" },
+					{ "name":"rot", "type":"float", "defaultValue":0, "description": "the rotation angle in radians" },
+					{ "name":"sc", "type":"float", "defaultValue":1.0, "description": "the uniform scale factor" }
+				],
+				"returnType": null,
+				"description": "Multiplies the current transformation matrix with a new transformation defined by translation (x,y), rotation rot, and uniform scale sc. Transformations are applied in the order: scale, rotate, translate."
+			},
+			{ "function":"save",
+				"parameters": [ ],
+				"returnType": null,
+				"description": "Pushes the current graphics state (transformation matrix, color, line width) onto a stack. Up to 7 states can be stacked."
+			},
+			{ "function":"restore",
+				"parameters": [ ],
+				"returnType": null,
+				"description": "restores a previously saved graphics state from the stack"
+			},
 			{ "function":"clipRect",
 				"parameters": [
 					{ "name":"x", "type":"int", "description": "the horizontal position of the clipping rectangle's upper left corner" },

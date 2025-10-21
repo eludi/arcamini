@@ -1,4 +1,5 @@
 let img = resource.getImage("test.png");
+let rings = resource.getTileGrid(resource.getImage("rings.svg", 1.0, 0.5, 0.5), 5);
 let font = resource.getFont("Viafont.ttf", 32);
 let sample = resource.getAudio("ding.wav");
 function createBeep(freq, dur, vol = 1.0) {
@@ -47,6 +48,14 @@ function draw(gfx) {
     gfx.clipRect(50+frame%224,200,32,256);
     gfx.drawImage(img, 50, 200);
     gfx.clipRect(0,0,-1,-1);
+
+    gfx.save();
+    const tile = Math.floor(frame / 6) % 5;
+    gfx.color(0xFFFFFFFF - 0x333300*tile);
+    gfx.transform(window.width()-32, window.height()-32, 0, 2);
+    gfx.drawImage(rings + tile, 0, 0);
+    gfx.restore();
+
     if (frame < 2) {
         console.log("draw called at frame", frame);
     }

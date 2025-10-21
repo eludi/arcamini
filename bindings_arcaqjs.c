@@ -396,6 +396,29 @@ static JSValue js_gfxLineWidth(JSContext *ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
+static JSValue js_gfxTransform(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    double x, y, rot, sc;
+    if (JS_ToFloat64(ctx, &x, argv[0]) ||
+        JS_ToFloat64(ctx, &y, argv[1]) ||
+        JS_ToFloat64Default(ctx, &rot, argv[2], 0.0) ||
+        JS_ToFloat64Default(ctx, &sc, argv[3], 1.0))
+        return JS_ThrowTypeError(ctx, "gfx.transform expects 4 numbers");
+    gfxTransform((float)x,(float)y,(float)rot,(float)sc);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gfxStateSave(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    (void)ctx; (void)this_val; (void)argc; (void)argv;
+    gfxStateSave();
+    return JS_UNDEFINED;
+}
+
+static JSValue js_gfxStateRestore(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    (void)ctx; (void)this_val; (void)argc; (void)argv;
+    gfxStateRestore();
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gfxClipRect(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     int32_t x,y,w,h;
     if (JS_ToInt32(ctx, &x, argv[0]) ||
@@ -473,6 +496,9 @@ static JSValue js_gfxFillTextAlign(JSContext *ctx, JSValueConst this_val, int ar
 static const JSCFunctionListEntry js_gfx_funcs[] = {
     JS_CFUNC_DEF("color", 1, js_gfxColor),
     JS_CFUNC_DEF("lineWidth", 1, js_gfxLineWidth),
+    JS_CFUNC_DEF("transform", 4, js_gfxTransform),
+    JS_CFUNC_DEF("save", 0, js_gfxStateSave),
+    JS_CFUNC_DEF("restore", 0, js_gfxStateRestore),
     JS_CFUNC_DEF("clipRect", 4, js_gfxClipRect),
     JS_CFUNC_DEF("drawRect", 4, js_gfxDrawRect),
     JS_CFUNC_DEF("fillRect", 4, js_gfxFillRect),

@@ -95,6 +95,27 @@ static int lua_gfxLineWidth(lua_State *L) {
     return 0;
 }
 
+static int lua_gfxTransform(lua_State *L) {
+    float x = (float)luaL_checknumber(L, 1);
+    float y = (float)luaL_checknumber(L, 2);
+    float rot = (float)luaL_optnumber(L, 3, 0.0f);
+    float sc = (float)luaL_optnumber(L, 4, 1.0f);
+    gfxTransform(x, y, rot, sc);
+    return 0;
+}
+
+static int lua_gfxStateSave(lua_State *L) {
+    (void)L;
+    gfxStateSave();
+    return 0;
+}
+
+static int lua_gfxStateRestore(lua_State *L) {
+    (void)L;
+    gfxStateRestore();
+    return 0;
+}
+
 static int lua_gfxClipRect(lua_State *L) {
     int x = (int)luaL_checkinteger(L, 1);
     int y = (int)luaL_checkinteger(L, 2);
@@ -156,9 +177,12 @@ static int lua_gfxFillTextAlign(lua_State *L) {
 static const luaL_Reg gfx_funcs[] = {
     {"color", lua_gfxColor},
     {"lineWidth", lua_gfxLineWidth},
+    {"transform", lua_gfxTransform},
+    {"save", lua_gfxStateSave},
+    {"restore", lua_gfxStateRestore},
+    {"clipRect", lua_gfxClipRect},
     {"drawRect", lua_gfxDrawRect},
     {"fillRect", lua_gfxFillRect},
-    {"clipRect", lua_gfxClipRect},
     {"drawLine", lua_gfxDrawLine},
     {"drawImage", lua_gfxDrawImage},
     {"fillText", lua_gfxFillTextAlign},

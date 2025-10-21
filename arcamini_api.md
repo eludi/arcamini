@@ -79,6 +79,20 @@ Sets the line width for drawLine and drawRect
 #### Parameters:
 - {float} w - the line width. Default is 1.0 pixels
 
+### function transform
+Multiplies the current transformation matrix with a new transformation defined by translation (x,y), rotation rot, and uniform scale sc. Transformations are applied in the order: scale, rotate, translate.
+#### Parameters:
+- {float} x - the translation in horizontal direction
+- {float} y - the translation in vertical direction
+- {float} rot (default: 0) - the rotation angle in radians
+- {float} sc (default: 1.0) - the uniform scale factor
+
+### function save
+Pushes the current graphics state (transformation matrix, color, line width) onto a stack. Up to 7 states can be stacked.
+
+### function restore
+restores a previously saved graphics state from the stack
+
 ### function clipRect
 Sets the clipping viewport for all subsequent draw calls in screen space. Default is (0,0,width,height) of the window. Use negative width/height to disable clipping.
 #### Parameters:
