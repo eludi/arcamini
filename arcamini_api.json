@@ -245,6 +245,19 @@
 				"returnType": "uint32",
 				"description": "creates an SVG image from an SVG string. Returns image handle or 0 if the image could not be created"
 			},
+			{ "function":"getSubImage",
+				"parameters": [
+					{ "name":"image", "type":"uint32", "description":"the handle of the parent image" },
+					{ "name":"x", "type":"int", "description":"the horizontal position of the sub-image's upper left corner in pixels" },
+					{ "name":"y", "type":"int", "description":"the vertical position of the sub-image's upper left corner in pixels" },
+					{ "name":"w", "type":"int", "description":"the width of the sub-image in pixels" },
+					{ "name":"h", "type":"int", "description":"the height of the sub-image in pixels" },
+					{ "name":"centerX", "type":"float", "defaultValue":0.0, "description":"the relative horizontal center position of the image in range [0.0, 1.0]" },
+					{ "name":"centerY", "type":"float", "defaultValue":0.0, "description":"the relative vertical center position of the image in range [0.0, 1.0]" }
+				],
+				"returnType": "uint32",
+				"description": "creates a sub-image from an existing image. Returns handle of the sub-image or 0 if the sub-image could not be created."
+			},
 			{ "function":"getTileGrid",
 				"parameters": [
 					{ "name":"image", "type":"uint32", "description":"the handle of the parent image" },

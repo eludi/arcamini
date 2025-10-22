@@ -247,6 +247,19 @@ static int lua_resourceCreateSVGImage(lua_State *L) {
 	return 1;
 }
 
+static int lua_resourceGetTileImage(lua_State *L) {
+    uint32_t parent = (uint32_t)luaL_checkinteger(L, 1);
+    int x = (int)luaL_checkinteger(L, 2);
+    int y = (int)luaL_checkinteger(L, 3);
+    int width = (int)luaL_checkinteger(L, 4);
+    int height = (int)luaL_checkinteger(L, 5);
+    float centerX = (float)luaL_optnumber(L, 6, 0.0f);
+    float centerY = (float)luaL_optnumber(L, 7, 0.0f);
+	uint32_t handle = arcmResourceGetTileImage(parent, x, y, width, height, centerX, centerY);
+    lua_pushinteger(L, handle);
+    return 1;
+}
+
 static int lua_resourceGetTileGrid(lua_State *L) {
     uint32_t img = (uint32_t)luaL_checkinteger(L, 1);
     int tilesX = (int)luaL_checkinteger(L, 2);
@@ -317,6 +330,7 @@ static const luaL_Reg resource_funcs[] = {
     {"getImage", lua_resourceGetImage},
     {"createImage", lua_resourceCreateImage},
     {"createSVGImage", lua_resourceCreateSVGImage},
+    {"getTileImage", lua_resourceGetTileImage},
     {"getTileGrid", lua_resourceGetTileGrid},
     {"getAudio", lua_resourceGetAudio},
     {"createAudio", lua_resourceCreateAudio},

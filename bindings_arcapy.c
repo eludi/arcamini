@@ -320,6 +320,25 @@ static bool py_ResourceCreateSVGImage(int argc, py_StackRef argv) {
 	return true;
 }
 
+static bool py_ResourceGetTileImage(int argc, py_StackRef argv) {
+	int64_t parent, x, y, width, height;
+	float centerX=0.0f, centerY=0.0f;
+	if(!py_castint(py_arg(0), &parent) ||
+	   !py_castint(py_arg(1), &x) ||
+	   !py_castint(py_arg(2), &y) ||
+	   !py_castint(py_arg(3), &width) ||
+	   !py_castint(py_arg(4), &height))
+		return false;
+	if(argc > 5 && !py_castfloat32(py_arg(5), &centerX))
+		return false;
+	if(argc > 6 && !py_castfloat32(py_arg(6), &centerY))
+		return false;
+	uint32_t handle = arcmResourceGetTileImage(
+		(uint32_t)parent, (int)x, (int)y, (int)width, (int)height, centerX, centerY);
+	py_newint(py_retval(), (int64_t)handle);
+	return true;
+}
+
 static bool py_ResourceGetTileGrid(int argc, py_StackRef argv) {
 	int64_t img, tilesX, tilesY = 1, borderW = 0;
 	if(!py_castint(py_arg(0), &img) || !py_castint(py_arg(1), &tilesX))
@@ -438,6 +457,7 @@ static void bindArcamini() {
 	py_bindfunc(resource_ns, "getImage", py_ResourceGetImage);
 	py_bindfunc(resource_ns, "createImage", py_ResourceCreateImage);
 	py_bindfunc(resource_ns, "createSVGImage", py_ResourceCreateSVGImage);
+	py_bindfunc(resource_ns, "getTileImage", py_ResourceGetTileImage);
 	py_bindfunc(resource_ns, "getTileGrid", py_ResourceGetTileGrid);
 	py_bindfunc(resource_ns, "getAudio", py_ResourceGetAudio);
 	py_bindfunc(resource_ns, "createAudio", py_ResourceCreateAudio);

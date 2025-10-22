@@ -204,6 +204,20 @@ creates an SVG image from an SVG string. Returns image handle or 0 if the image 
 #### Returns:
 - {uint32}
 
+### function getSubImage
+creates a sub-image from an existing image. Returns handle of the sub-image or 0 if the sub-image could not be created.
+#### Parameters:
+- {uint32} image - the handle of the parent image
+- {int} x - the horizontal position of the sub-image's upper left corner in pixels
+- {int} y - the vertical position of the sub-image's upper left corner in pixels
+- {int} w - the width of the sub-image in pixels
+- {int} h - the height of the sub-image in pixels
+- {float} centerX (default: 0.0) - the relative horizontal center position of the image in range [0.0, 1.0]
+- {float} centerY (default: 0.0) - the relative vertical center position of the image in range [0.0, 1.0]
+
+#### Returns:
+- {uint32}
+
 ### function getTileGrid
 creates multiple tile images an existing image. The image is divided into tilesX x tilesY tiles, optionally with a border of borderW pixels between the tiles. Returns handle of the first tile or 0 if the tile images could not be created.
 #### Parameters:

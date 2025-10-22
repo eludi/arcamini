@@ -598,6 +598,23 @@ static JSValue js_ResourceCreateImage(JSContext *ctx, JSValueConst this_val, int
     return JS_NewUint32(ctx, (uint32_t)handle);
 }
 
+static JSValue js_ResourceGetTileImage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    uint32_t parent;
+    int x, y, width, height;
+    double centerX, centerY;
+    if (JS_ToUint32(ctx, &parent, argv[0])
+        || JS_ToInt32(ctx, &x, argv[1])
+        || JS_ToInt32(ctx, &y, argv[2])
+        || JS_ToInt32(ctx, &width, argv[3])
+        || JS_ToInt32(ctx, &height, argv[4])
+        || JS_ToFloat64Default(ctx, &centerX, argv[5], 0.0)
+        || JS_ToFloat64Default(ctx, &centerY, argv[6], 0.0)) {
+        return JS_ThrowTypeError(ctx, "resource.getTileImage expects (uint32, int, int, int, int[, float, float])");
+    }
+    uint32_t handle = arcmResourceGetTileImage(parent, x, y, width, height, centerX, centerY);
+    return JS_NewUint32(ctx, handle);
+}
+
 static JSValue js_ResourceGetTileGrid(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     uint32_t img; uint32_t tilesX, tilesY, borderW;
     if (JS_ToUint32(ctx, &img, argv[0])
@@ -606,8 +623,8 @@ static JSValue js_ResourceGetTileGrid(JSContext *ctx, JSValueConst this_val, int
         || JS_ToUint32Default(ctx, &borderW, argv[3], 0)) {
         return JS_ThrowTypeError(ctx, "resource.getTileGrid expects (uint32, uint32[, uint32, uint32])");
     }
-    size_t handle = gfxImageTileGrid(img, tilesX, tilesY, borderW);
-    return JS_NewUint32(ctx, (uint32_t)handle);
+    uint32_t handle = gfxImageTileGrid(img, tilesX, tilesY, borderW);
+    return JS_NewUint32(ctx, handle);
 }
 
 static JSValue js_ResourceGetAudio(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -695,6 +712,7 @@ static const JSCFunctionListEntry js_Resource_funcs[] = {
     JS_CFUNC_DEF("getImage", 5, js_ResourceGetImage),
     JS_CFUNC_DEF("createSVGImage", 4, js_ResourceCreateSVGImage),
     JS_CFUNC_DEF("createImage", 6, js_ResourceCreateImage),
+    JS_CFUNC_DEF("getTileImage", 7, js_ResourceGetTileImage),
     JS_CFUNC_DEF("getTileGrid", 4, js_ResourceGetTileGrid),
     JS_CFUNC_DEF("getAudio", 1, js_ResourceGetAudio),
     JS_CFUNC_DEF("createAudio", 4, js_ResourceCreateAudio),

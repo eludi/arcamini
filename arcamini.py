@@ -133,6 +133,12 @@ _lib.arcmResourceCreateSVGImage.restype = c_uint
 resource.createSVGImage = lambda svg, scale=1.0, centerX=0.0, centerY=0.0: _lib.arcmResourceCreateSVGImage(
     svg.encode('utf-8'), c_float(scale), c_float(centerX), c_float(centerY))
 
+#extern uint32_t arcmResourceGetTileImage(uint32_t parent, int x, int y, int w, int h, float cx, float cy);
+_lib.arcmResourceGetTileImage.argtypes = [c_uint, c_int, c_int, c_int, c_int, c_float, c_float]
+_lib.arcmResourceGetTileImage.restype = c_uint
+resource.getTileImage = lambda parent, x, y, w, h, cx=0.0, cy=0.0: _lib.arcmResourceGetTileImage(
+    c_uint(parent), c_int(x), c_int(y), c_int(w), c_int(h), c_float(cx), c_float(cy))
+
 #extern uint32_t gfxImageTileGrid(uint32_t parent, uint16_t tilesX, uint16_t tilesY, uint16_t border);
 _lib.gfxImageTileGrid.argtypes = [c_uint, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint16]
 _lib.gfxImageTileGrid.restype = c_uint

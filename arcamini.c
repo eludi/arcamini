@@ -44,6 +44,12 @@ uint32_t arcmResourceCreateSVGImage(const char* svg, float scale, float centerX,
     return handle;
 }
 
+uint32_t arcmResourceGetTileImage(uint32_t parent, int x, int y, int w, int h, float cx, float cy) {
+	uint32_t handle = gfxImageTile(parent, x, y, w, h);
+	gfxImageSetCenter(handle, cx, cy);
+	return handle;
+}
+
 //--- Storage ------------------------------------------------------
 static char * storageFileName = NULL;
 static Value* storageData = NULL;

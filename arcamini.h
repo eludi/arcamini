@@ -60,6 +60,9 @@ extern uint32_t arcmResourceGetImage(const char* name, float scale, float center
 extern uint32_t arcmResourceCreateImage(const uint8_t* data, int width, int height, float centerX, float centerY, int filtering);
 /// returns handle to an image resource created from an SVG string
 extern uint32_t arcmResourceCreateSVGImage(const char* svg, float scale, float centerX, float centerY);
+/// defines an image resource as a tile of a parent image. Returens handle of subimage resource
+/** exposed as resource.getTileImage(parent, x, y, w, h, centerX=0.0, centerY=0.0) */
+extern uint32_t arcmResourceGetTileImage(uint32_t parent, int x, int y, int w, int h, float cx, float cy);
 /// defines a regular grid of image resources based on a parent image resource
 /** @return handle of first subimage resource
  * exposed as resource.imageTileGrid(parent, tilesX[, tilesY=1, border=0]) */
