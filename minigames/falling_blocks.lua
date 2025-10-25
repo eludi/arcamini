@@ -12,10 +12,10 @@ function beep(freq, dur, vol)
     return resource.createAudio(data)
 end
 
-local hit = beep(220, 0.2, 0.8)
+local hit = beep(220, 0.2)
 local notes = {}
 for _, f in ipairs({440, 494, 554, 659, 740, 880}) do
-    table.insert(notes, beep(f, 0.05, 0.2))
+    table.insert(notes, beep(f, 0.05, 0.4))
 end
 
 function enter(args)

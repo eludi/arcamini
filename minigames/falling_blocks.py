@@ -11,8 +11,8 @@ def beep(freq, dur, vol=1.0):
         for n in range(int(44100 * dur))
     ])
 
-hit = beep(220, .2, .8)
-notes = [beep(f, .05, .2) for f in (440, 494, 554, 659, 740, 880)]
+hit = beep(220, .2)
+notes = [beep(f, .05, .4) for f in (440, 494, 554, 659, 740, 880)]
 
 def enter(args):
     window.color(0x202020ff)

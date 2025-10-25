@@ -8,8 +8,8 @@ function beep(freq, dur, vol = 1.0) {
         data.push(Math.sin(2 * Math.PI * freq * n / 44100) * vol);
     return resource.createAudio(data);
 }
-const hit = beep(220, 0.2, 0.8);
-const notes = [440, 494, 554, 659, 740, 880].map(f => beep(f, 0.05, 0.2));
+const hit = beep(220, 0.2);
+const notes = [440, 494, 554, 659, 740, 880].map(f => beep(f, 0.05, 0.4));
 
 function enter(args) {
     window.color(0x202020ff);

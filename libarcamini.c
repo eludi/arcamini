@@ -143,6 +143,7 @@ bool arcamini_init(int winSzX, int winSzY, bool fullscreen, const char* archiveN
 
     srand(time(NULL));
     AudioOpen(44100, 8);
+	AudioSetVolume(0.5);
 
     int windowFlags = WINDOW_VSYNC;
     if (fullscreen)

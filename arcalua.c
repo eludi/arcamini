@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
 
 	srand(time(NULL));
 	AudioOpen(44100, 8);
+	AudioSetVolume(0.5);
 	if(WindowOpen(winSzX, winSzY, windowFlags)!=0) {
 		fprintf(stderr, "Setting video mode failed.\n");
 		return -1;

@@ -24,6 +24,15 @@ void arcmAudioVolume(uint32_t track, float volume, float fadeTime) {
 		AudioAdjustVolume(track, volume);
 }
 
+static void arcmAudioDeltaVolume(float delta) {
+	float volume = AudioGetVolume() + delta;
+	if(volume<0.0f)
+		volume = 0.0f;
+	if(volume>1.0f)
+		volume = 1.0f;
+	AudioSetVolume(volume);
+}
+
 //--- Resource -----------------------------------------------------
 uint32_t arcmResourceGetImage(const char* name, float scale, float centerX, float centerY, int filtering) {
 	//fprintf(stderr, "arcmResourceGetImage(%s, %f, %f, %f, %d)", name, scale, centerX, centerY, filtering);
@@ -147,6 +156,9 @@ int arcmDispatchInputEvents(void* callback) {
 				case '2': dispatchButtonEvent(numControllers+1, 1, 1.0f, callback); break;
 				case '3': dispatchButtonEvent(numControllers+1, 2, 1.0f, callback); break;
 				case '4': dispatchButtonEvent(numControllers+1, 3, 1.0f, callback); break;
+
+				case SDLK_VOLUMEUP: arcmAudioDeltaVolume(+0.1f); break;
+				case SDLK_VOLUMEDOWN: arcmAudioDeltaVolume(-0.1f); break;
 			}
 			break;
 		case SDL_KEYUP: {

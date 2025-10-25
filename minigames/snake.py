@@ -4,7 +4,7 @@ from arcamini import window, resource, audio
 winX, winY, sc = window.width(), window.height(), window.height()//240
 grid = 10*sc
 snake, food, dir, score, state, delay = [], (0,0), (1,0), 0, "play", 0
-beep = resource.createAudio([0.3*math.sin(2*math.pi*660*n/44100) for n in range(2000)])
+beep = resource.createAudio([0.4*math.sin(2*math.pi*660*n/44100) for n in range(2000)])
 moop = resource.createAudio([math.sin(2*math.pi*220*n/44100) for n in range(10000)])
 
 def enter(args):
