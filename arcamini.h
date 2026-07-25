@@ -74,6 +74,12 @@ extern size_t ResourceGetAudio(const char* name);
 extern uint32_t AudioUploadPCM(float* waveData, uint32_t numSamples, uint8_t numChannels, uint32_t offset);
 /// returns handle to a font resource
 extern size_t ResourceGetFont(const char* name, unsigned fontSize);
+/// returns width and height of image in pixels, exposed as resource.queryImage(handle)
+extern void gfxImageDimensions(uint32_t img, int* w, int* h);
+/// returns number of channels and sample frames of an audio resource, exposed as resource.queryAudio(handle)
+extern void AudioSampleInfo(uint32_t sample, uint8_t* numChannels, uint32_t* numSamples);
+/// determines text dimensions, exposed as resource.queryFont(handle, str="M")
+extern void gfxMeasureText(uint32_t font, const char* text, float* width, float* height, float* ascent, float* descent);
 /// returns pointer to a storage item value identified by a key
 extern const char* arcmResourceGetStorageItem(const char* key);
 /// sets a key-value pair storage item 

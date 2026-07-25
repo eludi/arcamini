@@ -204,7 +204,7 @@ creates an SVG image from an SVG string. Returns image handle or 0 if the image 
 #### Returns:
 - {uint32}
 
-### function getSubImage
+### function getTileImage
 creates a sub-image from an existing image. Returns handle of the sub-image or 0 if the sub-image could not be created.
 #### Parameters:
 - {uint32} image - the handle of the parent image

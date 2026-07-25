@@ -245,7 +245,7 @@
 				"returnType": "uint32",
 				"description": "creates an SVG image from an SVG string. Returns image handle or 0 if the image could not be created"
 			},
-			{ "function":"getSubImage",
+			{ "function":"getTileImage",
 				"parameters": [
 					{ "name":"image", "type":"uint32", "description":"the handle of the parent image" },
 					{ "name":"x", "type":"int", "description":"the horizontal position of the sub-image's upper left corner in pixels" },
@@ -290,6 +290,31 @@
 				],
 				"returnType": "uint32",
 				"description": "loads a font from the app's directory at the specified size. Supported font formats are TTF or image formats. In the latter case, it is assumed that the image contains a grid of 16x16 glyphs. Returns font handle or 0 if the font could not be found or loaded."
+			},
+			{ "function":"queryImage",
+				"parameters": [
+					{ "name":"image", "type":"uint32", "description":"the image resource handle" },
+					{ "name":"property", "type":"string", "description":"either 'width' or 'height'" }
+				],
+				"returnType": "uint32",
+				"description": "queries the width or height of an image. Returns the with width or height, or 0 if the image handle is invalid."
+			},
+			{ "function":"queryAudio",
+				"parameters": [
+					{ "name":"sample", "type":"uint32", "description":"the audio sample resource handle" },
+					{ "name":"property", "type":"string", "description":"either 'channels', 'frames', or 'sampleRate'" }
+				],
+				"returnType": "uint32",
+				"description": "queries the properties of an audio sample. Returns numChannels, numFrames, sampleRate, or 0 if the audio sample handle is invalid."
+			},
+			{ "function":"queryFont",
+				"parameters": [
+					{ "name":"font", "type":"uint32", "description":"the font resource handle" },
+					{ "name":"str", "type":"string", "defaultValue":"M", "description":"the text string to measure" },
+					{ "name":"property", "type":"string", "description":"either 'width', 'height', 'ascent', or 'descent'" }
+				],
+				"returnType": "float",
+				"description": "queries properties of a font or string. Returns either width, height, ascent, or descent properties, or NaN if the font handle is invalid."
 			},
 			{ "function":"setStorageItem",
 				"parameters": [

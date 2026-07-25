@@ -471,10 +471,12 @@ static void bindArcamini() {
 /// --- VM Management ---
 
 // Custom importfile callback
-static char* custom_importfile(const char* module_name) {
+static char* custom_importfile(const char* module_name, int* data_size) {
 	char* script = ResourceGetText(module_name);
 	if (!script)
 		fprintf(stderr, "Module not found: %s\n", module_name);
+	else if (data_size)
+		*data_size = (int)strlen(script);
 	return script;
 }
 
