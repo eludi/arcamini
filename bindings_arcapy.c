@@ -398,6 +398,39 @@ static bool py_ResourceGetFont(int argc, py_StackRef argv) {
 	return true;
 }
 
+static bool py_ResourceQueryImage(int argc, py_StackRef argv) {
+	PY_CHECK_ARGC(2);
+	int64_t image;
+	if(!py_castint(py_arg(0), &image))
+		return false;
+	const char* property = py_tostr(py_arg(1));
+	uint32_t value = arcmQueryImage((uint32_t)image, property);
+	py_newint(py_retval(), (int64_t)value);
+	return true;
+}
+
+static bool py_ResourceQueryAudio(int argc, py_StackRef argv) {
+	PY_CHECK_ARGC(2);
+	int64_t sample;
+	if(!py_castint(py_arg(0), &sample))
+		return false;
+	const char* property = py_tostr(py_arg(1));
+	uint32_t value = arcmQueryAudio((uint32_t)sample, property);
+	py_newint(py_retval(), (int64_t)value);
+	return true;
+}
+
+static bool py_ResourceQueryFont(int argc, py_StackRef argv) {
+	int64_t font;
+	if(!py_castint(py_arg(0), &font))
+		return false;
+	const char* property = py_tostr(py_arg(1));
+	const char* str = argc > 2 ? py_tostr(py_arg(2)) : "M";
+	float value = arcmQueryFont((uint32_t)font, property, str);
+	py_newfloat(py_retval(), (double)value);
+	return true;
+}
+
 static bool py_ResourceGetStorageItem(int argc, py_StackRef argv) {
 	PY_CHECK_ARGC(1);
 	const char* key = py_tostr(py_arg(0));
@@ -462,6 +495,9 @@ static void bindArcamini() {
 	py_bindfunc(resource_ns, "getAudio", py_ResourceGetAudio);
 	py_bindfunc(resource_ns, "createAudio", py_ResourceCreateAudio);
 	py_bindfunc(resource_ns, "getFont", py_ResourceGetFont);
+	py_bindfunc(resource_ns, "queryImage", py_ResourceQueryImage);
+	py_bindfunc(resource_ns, "queryAudio", py_ResourceQueryAudio);
+	py_bindfunc(resource_ns, "queryFont", py_ResourceQueryFont);
 	py_bindfunc(resource_ns, "getStorageItem", py_ResourceGetStorageItem);
 	py_bindfunc(resource_ns, "setStorageItem", py_ResourceSetStorageItem);
 	py_setdict(arcamini_ns, py_name("resource"), resource_ns);

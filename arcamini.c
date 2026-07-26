@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 void arcmAudioVolume(uint32_t track, float volume, float fadeTime) {
 	if(fadeTime <= 0.0f) {
@@ -57,6 +58,52 @@ uint32_t arcmResourceGetTileImage(uint32_t parent, int x, int y, int w, int h, f
 	uint32_t handle = gfxImageTile(parent, x, y, w, h);
 	gfxImageSetCenter(handle, cx, cy);
 	return handle;
+}
+
+uint32_t arcmQueryImage(uint32_t image, const char* property) {
+	int w = 0, h = 0;
+	gfxImageDimensions(image, &w, &h);
+	if(!strcmp(property, "width"))
+		return (uint32_t)w;
+	if(!strcmp(property, "height"))
+		return (uint32_t)h;
+	return 0;
+}
+
+uint32_t arcmQueryAudio(uint32_t sample, const char* property) {
+	uint8_t numChannels = 0; uint32_t numFrames = 0;
+	AudioSampleInfo(sample, &numChannels, &numFrames);
+	if(!strcmp(property, "channels"))
+		return (uint32_t)numChannels;
+	if(!strcmp(property, "frames"))
+		return numFrames;
+	if(!strcmp(property, "sampleRate"))
+		return AudioSampleRate();
+	return 0;
+}
+
+float arcmQueryFont(uint32_t font, const char* property, const char* str) {
+	// gfxMeasureText() re-shapes the whole string, so cache the last (font, str)
+	// measurement: querying several properties of the same text is the common case.
+	static uint32_t cacheFont = 0;
+	static char* cacheStr = NULL;
+	static float width = NAN, height = NAN, ascent = NAN, descent = NAN;
+
+	if(font != cacheFont || !cacheStr || strcmp(cacheStr, str)) {
+		gfxMeasureText(font, str, &width, &height, &ascent, &descent);
+		cacheFont = font;
+		free(cacheStr);
+		cacheStr = strdup(str);
+	}
+	if(!strcmp(property, "width"))
+		return width;
+	if(!strcmp(property, "height"))
+		return height;
+	if(!strcmp(property, "ascent"))
+		return ascent;
+	if(!strcmp(property, "descent"))
+		return descent;
+	return NAN;
 }
 
 //--- Storage ------------------------------------------------------

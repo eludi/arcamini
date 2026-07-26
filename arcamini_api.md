@@ -255,6 +255,34 @@ loads a font from the app's directory at the specified size. Supported font form
 #### Returns:
 - {uint32}
 
+### function queryImage
+queries the width or height of an image. Returns the with width or height, or 0 if the image handle is invalid.
+#### Parameters:
+- {uint32} image - the image resource handle
+- {string} property - either 'width' or 'height'
+
+#### Returns:
+- {uint32}
+
+### function queryAudio
+queries the properties of an audio sample. Returns numChannels, numFrames, sampleRate, or 0 if the audio sample handle is invalid.
+#### Parameters:
+- {uint32} sample - the audio sample resource handle
+- {string} property - either 'channels', 'frames', or 'sampleRate'
+
+#### Returns:
+- {uint32}
+
+### function queryFont
+queries properties of a font or string. Returns either width, height, ascent, or descent properties, or NaN if the font handle is invalid.
+#### Parameters:
+- {uint32} font - the font resource handle
+- {string} property - either 'width', 'height', 'ascent', or 'descent'
+- {string} str (default: M) - the text string to measure
+
+#### Returns:
+- {float}
+
 ### function setStorageItem
 sets a value in an app-specific persistent key-value store
 #### Parameters:

@@ -310,8 +310,8 @@
 			{ "function":"queryFont",
 				"parameters": [
 					{ "name":"font", "type":"uint32", "description":"the font resource handle" },
-					{ "name":"str", "type":"string", "defaultValue":"M", "description":"the text string to measure" },
-					{ "name":"property", "type":"string", "description":"either 'width', 'height', 'ascent', or 'descent'" }
+					{ "name":"property", "type":"string", "description":"either 'width', 'height', 'ascent', or 'descent'" },
+					{ "name":"str", "type":"string", "defaultValue":"M", "description":"the text string to measure" }
 				],
 				"returnType": "float",
 				"description": "queries properties of a font or string. Returns either width, height, ascent, or descent properties, or NaN if the font handle is invalid."

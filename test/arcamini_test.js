@@ -24,6 +24,12 @@ function enter(args) {
     audio.replay(sample, 1, 0.5);
     let track = audio.replay(tone880, 0.5, -0.5);
     audio.volume(track, 0.0, 1.0); // fade out over 1 second
+
+    console.log("query image w/h:", resource.queryImage(img, "width"), resource.queryImage(img, "height"));
+    console.log("query image invalid handle:", resource.queryImage(999999, "width"));
+    console.log("query audio channels/frames/sampleRate:", resource.queryAudio(sample, "channels"), resource.queryAudio(sample, "frames"), resource.queryAudio(sample, "sampleRate"));
+    console.log("query font w/h/ascent/descent:", resource.queryFont(font, "width", "Hello"), resource.queryFont(font, "height", "Hello"), resource.queryFont(font, "ascent", "Hello"), resource.queryFont(font, "descent", "Hello"));
+    console.log("query font default str:", resource.queryFont(font, "width"));
 }
 
 function input(evt, device, id, value, value2) {

@@ -684,6 +684,46 @@ static JSValue js_ResourceGetFont(JSContext *ctx, JSValueConst this_val, int arg
     return JS_NewUint32(ctx, (uint32_t)handle);
 }
 
+static JSValue js_ResourceQueryImage(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    uint32_t image;
+    const char* property = JS_ToCString(ctx, argv[1]);
+    if (JS_ToUint32(ctx, &image, argv[0]) || !property) {
+        if (property) JS_FreeCString(ctx, property);
+        return JS_ThrowTypeError(ctx, "resource.queryImage expects (uint32, string)");
+    }
+    uint32_t value = arcmQueryImage(image, property);
+    JS_FreeCString(ctx, property);
+    return JS_NewUint32(ctx, value);
+}
+
+static JSValue js_ResourceQueryAudio(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    uint32_t sample;
+    const char* property = JS_ToCString(ctx, argv[1]);
+    if (JS_ToUint32(ctx, &sample, argv[0]) || !property) {
+        if (property) JS_FreeCString(ctx, property);
+        return JS_ThrowTypeError(ctx, "resource.queryAudio expects (uint32, string)");
+    }
+    uint32_t value = arcmQueryAudio(sample, property);
+    JS_FreeCString(ctx, property);
+    return JS_NewUint32(ctx, value);
+}
+
+static JSValue js_ResourceQueryFont(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    uint32_t font;
+    const char* property = JS_ToCString(ctx, argv[1]);
+    int hasStr = !JS_IsUndefined(argv[2]);
+    const char* str = hasStr ? JS_ToCString(ctx, argv[2]) : "M";
+    if (JS_ToUint32(ctx, &font, argv[0]) || !property || !str) {
+        if (property) JS_FreeCString(ctx, property);
+        if (hasStr && str) JS_FreeCString(ctx, str);
+        return JS_ThrowTypeError(ctx, "resource.queryFont expects (uint32, string[, string])");
+    }
+    float value = arcmQueryFont(font, property, str);
+    JS_FreeCString(ctx, property);
+    if (hasStr) JS_FreeCString(ctx, str);
+    return JS_NewFloat64(ctx, (double)value);
+}
+
 static JSValue js_ResourceGetStorageItem(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     const char* key = JS_ToCString(ctx, argv[0]);
     if (!key)
@@ -717,6 +757,9 @@ static const JSCFunctionListEntry js_Resource_funcs[] = {
     JS_CFUNC_DEF("getAudio", 1, js_ResourceGetAudio),
     JS_CFUNC_DEF("createAudio", 4, js_ResourceCreateAudio),
     JS_CFUNC_DEF("getFont", 2, js_ResourceGetFont),
+    JS_CFUNC_DEF("queryImage", 2, js_ResourceQueryImage),
+    JS_CFUNC_DEF("queryAudio", 2, js_ResourceQueryAudio),
+    JS_CFUNC_DEF("queryFont", 3, js_ResourceQueryFont),
     JS_CFUNC_DEF("getStorageItem", 1, js_ResourceGetStorageItem),
     JS_CFUNC_DEF("setStorageItem", 2, js_ResourceSetStorageItem),
 };

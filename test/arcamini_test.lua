@@ -25,6 +25,12 @@ function enter(args)
     audio.replay(sample, 1, 0.5)
     local track = audio.replay(tone880, 0.5, -0.5)
     audio.volume(track, 0.0, 1.0) -- fade out over 1 second
+
+    print("query image w/h:", resource.queryImage(img, "width"), resource.queryImage(img, "height"))
+    print("query image invalid handle:", resource.queryImage(999999, "width"))
+    print("query audio channels/frames/sampleRate:", resource.queryAudio(sample, "channels"), resource.queryAudio(sample, "frames"), resource.queryAudio(sample, "sampleRate"))
+    print("query font w/h/ascent/descent:", resource.queryFont(font, "width", "Hello"), resource.queryFont(font, "height", "Hello"), resource.queryFont(font, "ascent", "Hello"), resource.queryFont(font, "descent", "Hello"))
+    print("query font default str:", resource.queryFont(font, "width"))
 end
 
 function input(evt, device, id, value, value2)

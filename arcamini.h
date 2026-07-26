@@ -74,23 +74,20 @@ extern size_t ResourceGetAudio(const char* name);
 extern uint32_t AudioUploadPCM(float* waveData, uint32_t numSamples, uint8_t numChannels, uint32_t offset);
 /// returns handle to a font resource
 extern size_t ResourceGetFont(const char* name, unsigned fontSize);
-/// returns width and height of image in pixels, exposed as resource.queryImage(handle)
-extern void gfxImageDimensions(uint32_t img, int* w, int* h);
-/// returns number of channels and sample frames of an audio resource, exposed as resource.queryAudio(handle)
-extern void AudioSampleInfo(uint32_t sample, uint8_t* numChannels, uint32_t* numSamples);
-/// determines text dimensions, exposed as resource.queryFont(handle, str="M")
-extern void gfxMeasureText(uint32_t font, const char* text, float* width, float* height, float* ascent, float* descent);
+/// queries the width or height of an image, in pixels. Returns 0 if the image handle is invalid
+/** exposed as resource.queryImage(image, property) with property either 'width' or 'height' */
+extern uint32_t arcmQueryImage(uint32_t image, const char* property);
+/// queries the properties of an audio sample. Returns 0 if the audio sample handle is invalid
+/** exposed as resource.queryAudio(sample, property) with property either 'channels', 'frames', or 'sampleRate' */
+extern uint32_t arcmQueryAudio(uint32_t sample, const char* property);
+/// queries properties of a font or string. Returns NaN if the font handle is invalid
+/** exposed as resource.queryFont(font, property, str="M") with property either 'width', 'height', 'ascent', or 'descent' */
+extern float arcmQueryFont(uint32_t font, const char* property, const char* str);
 /// returns pointer to a storage item value identified by a key
 extern const char* arcmResourceGetStorageItem(const char* key);
 /// sets a key-value pair storage item 
 extern void arcmResourceSetStorageItem(const char* key, const char* value);
 
-/// defines an image resource as section of a parent image. Returens handle of subimage resource.
-//extern size_t arcmResourceGetTile(size_t parent, float x, float y, float w, float h, float centerX, float centerY);
-/// returns an object containing text dimensions. Pass 0 as slen to determine length via strlen(str). 
-//extern Value* arcmResourceQueryFont(size_t handle, const char* str, size_t slen);
-/// returns an object containing an image's dimensions
-//extern Value* arcmResourceQueryImage(size_t handle);
 ///@}
 
 ///@{ auxiliary functions mainly for the host application

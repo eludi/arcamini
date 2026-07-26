@@ -307,6 +307,31 @@ static int lua_resourceGetFont(lua_State *L) {
     return 1;
 }
 
+static int lua_resourceQueryImage(lua_State *L) {
+    uint32_t image = (uint32_t)luaL_checkinteger(L, 1);
+    const char* property = luaL_checkstring(L, 2);
+    uint32_t value = arcmQueryImage(image, property);
+    lua_pushinteger(L, value);
+    return 1;
+}
+
+static int lua_resourceQueryAudio(lua_State *L) {
+    uint32_t sample = (uint32_t)luaL_checkinteger(L, 1);
+    const char* property = luaL_checkstring(L, 2);
+    uint32_t value = arcmQueryAudio(sample, property);
+    lua_pushinteger(L, value);
+    return 1;
+}
+
+static int lua_resourceQueryFont(lua_State *L) {
+    uint32_t font = (uint32_t)luaL_checkinteger(L, 1);
+    const char* property = luaL_checkstring(L, 2);
+    const char* str = luaL_optstring(L, 3, "M");
+    float value = arcmQueryFont(font, property, str);
+    lua_pushnumber(L, value);
+    return 1;
+}
+
 static int lua_resourceSetStorageItem(lua_State *L) {
     const char* key = luaL_checkstring(L, 1);
     const char* val = lua_tostring(L, 2);
@@ -335,6 +360,9 @@ static const luaL_Reg resource_funcs[] = {
     {"getAudio", lua_resourceGetAudio},
     {"createAudio", lua_resourceCreateAudio},
     {"getFont", lua_resourceGetFont},
+    {"queryImage", lua_resourceQueryImage},
+    {"queryAudio", lua_resourceQueryAudio},
+    {"queryFont", lua_resourceQueryFont},
     {"setStorageItem", lua_resourceSetStorageItem},
     {"getStorageItem", lua_resourceGetStorageItem},
     {NULL, NULL}
