@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # arcamini.py - CPython bindings for arcamini C library
-import ctypes, struct, array
+import ctypes, struct, array, math
 from ctypes import c_double, c_bool, c_float, c_uint, c_int, c_uint8
 import sys, os, types
 import importlib.abc, importlib.util
@@ -170,18 +170,32 @@ resource.getFont = lambda name, fontSize=16: _lib.ResourceGetFont(name.encode('u
 #extern uint32_t arcmQueryImage(uint32_t image, const char* property);
 _lib.arcmQueryImage.argtypes = [c_uint, ctypes.c_char_p]
 _lib.arcmQueryImage.restype = c_uint
-resource.queryImage = lambda image, property: _lib.arcmQueryImage(c_uint(image), property.encode('utf-8'))
+def _queryImage(image, property):
+    value = _lib.arcmQueryImage(c_uint(image), property.encode('utf-8'))
+    if not value:
+        raise ValueError(f"resource.queryImage({image}, {property!r}) failed: invalid image handle or unrecognized property")
+    return value
+resource.queryImage = _queryImage
 
 #extern uint32_t arcmQueryAudio(uint32_t sample, const char* property);
 _lib.arcmQueryAudio.argtypes = [c_uint, ctypes.c_char_p]
 _lib.arcmQueryAudio.restype = c_uint
-resource.queryAudio = lambda sample, property: _lib.arcmQueryAudio(c_uint(sample), property.encode('utf-8'))
+def _queryAudio(sample, property):
+    value = _lib.arcmQueryAudio(c_uint(sample), property.encode('utf-8'))
+    if not value:
+        raise ValueError(f"resource.queryAudio({sample}, {property!r}) failed: invalid audio handle or unrecognized property")
+    return value
+resource.queryAudio = _queryAudio
 
 #extern float arcmQueryFont(uint32_t font, const char* property, const char* str);
 _lib.arcmQueryFont.argtypes = [c_uint, ctypes.c_char_p, ctypes.c_char_p]
 _lib.arcmQueryFont.restype = c_float
-resource.queryFont = lambda font, property, str="M": _lib.arcmQueryFont(
-    c_uint(font), property.encode('utf-8'), str.encode('utf-8'))
+def _queryFont(font, property, str="M"):
+    value = _lib.arcmQueryFont(c_uint(font), property.encode('utf-8'), str.encode('utf-8'))
+    if math.isnan(value):
+        raise ValueError(f"resource.queryFont({font}, {property!r}) failed: invalid font handle or unrecognized property")
+    return value
+resource.queryFont = _queryFont
 
 #extern const char* arcmResourceGetStorageItem(const char* key);
 _lib.arcmResourceGetStorageItem.argtypes = [ctypes.c_char_p]

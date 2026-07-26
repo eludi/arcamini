@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 extern const char* ResourceArchiveName();
 
@@ -311,6 +312,8 @@ static int lua_resourceQueryImage(lua_State *L) {
     uint32_t image = (uint32_t)luaL_checkinteger(L, 1);
     const char* property = luaL_checkstring(L, 2);
     uint32_t value = arcmQueryImage(image, property);
+    if(!value)
+        return luaL_error(L, "resource.queryImage(%d, '%s') failed: invalid image handle or unrecognized property", image, property);
     lua_pushinteger(L, value);
     return 1;
 }
@@ -319,6 +322,8 @@ static int lua_resourceQueryAudio(lua_State *L) {
     uint32_t sample = (uint32_t)luaL_checkinteger(L, 1);
     const char* property = luaL_checkstring(L, 2);
     uint32_t value = arcmQueryAudio(sample, property);
+    if(!value)
+        return luaL_error(L, "resource.queryAudio(%d, '%s') failed: invalid audio handle or unrecognized property", sample, property);
     lua_pushinteger(L, value);
     return 1;
 }
@@ -328,6 +333,8 @@ static int lua_resourceQueryFont(lua_State *L) {
     const char* property = luaL_checkstring(L, 2);
     const char* str = luaL_optstring(L, 3, "M");
     float value = arcmQueryFont(font, property, str);
+    if(isnan(value))
+        return luaL_error(L, "resource.queryFont(%d, '%s') failed: invalid font handle or unrecognized property", font, property);
     lua_pushnumber(L, value);
     return 1;
 }

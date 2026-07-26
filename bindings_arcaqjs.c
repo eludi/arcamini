@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 extern void* ResourceGetBinary(const char* name, size_t* numBytes);
 
@@ -692,6 +693,11 @@ static JSValue js_ResourceQueryImage(JSContext *ctx, JSValueConst this_val, int 
         return JS_ThrowTypeError(ctx, "resource.queryImage expects (uint32, string)");
     }
     uint32_t value = arcmQueryImage(image, property);
+    if (!value) {
+        JSValue exc = JS_ThrowTypeError(ctx, "resource.queryImage(%u, '%s') failed: invalid image handle or unrecognized property", image, property);
+        JS_FreeCString(ctx, property);
+        return exc;
+    }
     JS_FreeCString(ctx, property);
     return JS_NewUint32(ctx, value);
 }
@@ -704,6 +710,11 @@ static JSValue js_ResourceQueryAudio(JSContext *ctx, JSValueConst this_val, int 
         return JS_ThrowTypeError(ctx, "resource.queryAudio expects (uint32, string)");
     }
     uint32_t value = arcmQueryAudio(sample, property);
+    if (!value) {
+        JSValue exc = JS_ThrowTypeError(ctx, "resource.queryAudio(%u, '%s') failed: invalid audio handle or unrecognized property", sample, property);
+        JS_FreeCString(ctx, property);
+        return exc;
+    }
     JS_FreeCString(ctx, property);
     return JS_NewUint32(ctx, value);
 }
@@ -719,6 +730,12 @@ static JSValue js_ResourceQueryFont(JSContext *ctx, JSValueConst this_val, int a
         return JS_ThrowTypeError(ctx, "resource.queryFont expects (uint32, string[, string])");
     }
     float value = arcmQueryFont(font, property, str);
+    if (isnan(value)) {
+        JSValue exc = JS_ThrowTypeError(ctx, "resource.queryFont(%u, '%s') failed: invalid font handle or unrecognized property", font, property);
+        JS_FreeCString(ctx, property);
+        if (hasStr) JS_FreeCString(ctx, str);
+        return exc;
+    }
     JS_FreeCString(ctx, property);
     if (hasStr) JS_FreeCString(ctx, str);
     return JS_NewFloat64(ctx, (double)value);

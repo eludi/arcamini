@@ -297,7 +297,7 @@
 					{ "name":"property", "type":"string", "description":"either 'width' or 'height'" }
 				],
 				"returnType": "uint32",
-				"description": "queries the width or height of an image. Returns the with width or height, or 0 if the image handle is invalid."
+				"description": "queries the width or height of an image. Raises an error if the image handle is invalid or property is not 'width' or 'height'."
 			},
 			{ "function":"queryAudio",
 				"parameters": [
@@ -305,7 +305,7 @@
 					{ "name":"property", "type":"string", "description":"either 'channels', 'frames', or 'sampleRate'" }
 				],
 				"returnType": "uint32",
-				"description": "queries the properties of an audio sample. Returns numChannels, numFrames, sampleRate, or 0 if the audio sample handle is invalid."
+				"description": "queries the properties of an audio sample: numChannels, numFrames, or sampleRate. Raises an error if the audio sample handle is invalid or property is not one of these."
 			},
 			{ "function":"queryFont",
 				"parameters": [
@@ -314,7 +314,7 @@
 					{ "name":"str", "type":"string", "defaultValue":"M", "description":"the text string to measure" }
 				],
 				"returnType": "float",
-				"description": "queries properties of a font or string. Returns either width, height, ascent, or descent properties, or NaN if the font handle is invalid."
+				"description": "queries properties of a font or string: width, height, ascent, or descent. Raises an error if the font handle is invalid or property is not one of these."
 			},
 			{ "function":"setStorageItem",
 				"parameters": [

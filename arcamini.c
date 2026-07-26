@@ -78,7 +78,7 @@ uint32_t arcmQueryAudio(uint32_t sample, const char* property) {
 	if(!strcmp(property, "frames"))
 		return numFrames;
 	if(!strcmp(property, "sampleRate"))
-		return AudioSampleRate();
+		return numChannels ? AudioSampleRate() : 0; // numChannels==0 signals an invalid sample handle
 	return 0;
 }
 

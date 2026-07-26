@@ -26,7 +26,11 @@ def enter(args):
     audio.volume(track, 0.0, 1.0) # fade out over 1 second
 
     print("query image w/h:", resource.queryImage(img, "width"), resource.queryImage(img, "height"))
-    print("query image invalid handle:", resource.queryImage(999999, "width"))
+    try:
+        resource.queryImage(999999, "width")
+        print("query image invalid handle: BUG - did not throw")
+    except Exception as e:
+        print("query image invalid handle correctly threw:", e)
     print("query audio channels/frames/sampleRate:", resource.queryAudio(sample, "channels"), resource.queryAudio(sample, "frames"), resource.queryAudio(sample, "sampleRate"))
     print("query font w/h/ascent/descent:", resource.queryFont(font, "width", "Hello"), resource.queryFont(font, "height", "Hello"), resource.queryFont(font, "ascent", "Hello"), resource.queryFont(font, "descent", "Hello"))
     print("query font default str:", resource.queryFont(font, "width"))

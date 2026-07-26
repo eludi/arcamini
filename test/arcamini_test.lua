@@ -27,7 +27,9 @@ function enter(args)
     audio.volume(track, 0.0, 1.0) -- fade out over 1 second
 
     print("query image w/h:", resource.queryImage(img, "width"), resource.queryImage(img, "height"))
-    print("query image invalid handle:", resource.queryImage(999999, "width"))
+    local ok, err = pcall(function() resource.queryImage(999999, "width") end)
+    if ok then print("query image invalid handle: BUG - did not throw")
+    else print("query image invalid handle correctly threw:", err) end
     print("query audio channels/frames/sampleRate:", resource.queryAudio(sample, "channels"), resource.queryAudio(sample, "frames"), resource.queryAudio(sample, "sampleRate"))
     print("query font w/h/ascent/descent:", resource.queryFont(font, "width", "Hello"), resource.queryFont(font, "height", "Hello"), resource.queryFont(font, "ascent", "Hello"), resource.queryFont(font, "descent", "Hello"))
     print("query font default str:", resource.queryFont(font, "width"))

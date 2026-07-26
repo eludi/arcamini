@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 static bool handleException() {
 	char* msg = py_formatexc();
@@ -405,6 +406,8 @@ static bool py_ResourceQueryImage(int argc, py_StackRef argv) {
 		return false;
 	const char* property = py_tostr(py_arg(1));
 	uint32_t value = arcmQueryImage((uint32_t)image, property);
+	if(!value)
+		return ValueError("resource.queryImage(%i, '%s') failed: invalid image handle or unrecognized property\n", image, property);
 	py_newint(py_retval(), (int64_t)value);
 	return true;
 }
@@ -416,6 +419,8 @@ static bool py_ResourceQueryAudio(int argc, py_StackRef argv) {
 		return false;
 	const char* property = py_tostr(py_arg(1));
 	uint32_t value = arcmQueryAudio((uint32_t)sample, property);
+	if(!value)
+		return ValueError("resource.queryAudio(%i, '%s') failed: invalid audio handle or unrecognized property\n", sample, property);
 	py_newint(py_retval(), (int64_t)value);
 	return true;
 }
@@ -427,6 +432,8 @@ static bool py_ResourceQueryFont(int argc, py_StackRef argv) {
 	const char* property = py_tostr(py_arg(1));
 	const char* str = argc > 2 ? py_tostr(py_arg(2)) : "M";
 	float value = arcmQueryFont((uint32_t)font, property, str);
+	if(isnan(value))
+		return ValueError("resource.queryFont(%i, '%s') failed: invalid font handle or unrecognized property\n", font, property);
 	py_newfloat(py_retval(), (double)value);
 	return true;
 }
