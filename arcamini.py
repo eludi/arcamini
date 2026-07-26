@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # arcamini.py - CPython bindings for arcamini C library
-import ctypes, struct
+import ctypes, struct, array
 from ctypes import c_double, c_bool, c_float, c_uint, c_int, c_uint8
 import sys, os, types
 import importlib.abc, importlib.util
+
+def _as_c_array(data, typecode, ctype):
+    """Converts data to a ctypes array, avoiding a copy if it is already an array.array of matching typecode"""
+    if not (isinstance(data, array.array) and data.typecode == typecode):
+        data = array.array(typecode, data)
+    return (ctype * len(data)).from_buffer(data)
 
 if __name__ == "__main__": # ensure arcamini is the main module when run as script or imported
     sys.modules["arcamini"] = sys.modules["__main__"]
@@ -125,7 +131,7 @@ resource.getImage = lambda name, scale=1.0, centerX=0.0, centerY=0.0, filtering=
 _lib.arcmResourceCreateImage.argtypes = [ctypes.POINTER(c_uint), c_int, c_int, c_float, c_float, c_int]
 _lib.arcmResourceCreateImage.restype = c_uint
 resource.createImage = lambda data, width, height, centerX=0.0, centerY=0.0, filtering=1: _lib.arcmResourceCreateImage(
-    (c_uint * len(data))(*data), c_int(width), c_int(height), c_float(centerX), c_float(centerY), c_int(filtering))
+    _as_c_array(data, 'I', c_uint), c_int(width), c_int(height), c_float(centerX), c_float(centerY), c_int(filtering))
 
 #extern uint32_t arcmResourceCreateSVGImage(const char* svg, float scale, float centerX, float centerY);
 _lib.arcmResourceCreateSVGImage.argtypes = [ctypes.c_char_p, c_float, c_float, c_float]
@@ -154,12 +160,28 @@ resource.getAudio = lambda name: _lib.ResourceGetAudio(name.encode('utf-8'))
 _lib.arcamini_createAudio.argtypes = [ctypes.POINTER(c_float), c_uint, c_uint8]
 _lib.arcamini_createAudio.restype = c_uint
 resource.createAudio = lambda waveData, numChannels=1: _lib.arcamini_createAudio(
-    (c_float * len(waveData))(*waveData), c_uint(len(waveData)), c_uint8(numChannels))
+    _as_c_array(waveData, 'f', c_float), c_uint(len(waveData)), c_uint8(numChannels))
 
 #extern size_t ResourceGetFont(const char* name, unsigned fontSize);
 _lib.ResourceGetFont.argtypes = [ctypes.c_char_p, c_uint]
 _lib.ResourceGetFont.restype = c_uint
 resource.getFont = lambda name, fontSize=16: _lib.ResourceGetFont(name.encode('utf-8'), c_uint(fontSize))
+
+#extern uint32_t arcmQueryImage(uint32_t image, const char* property);
+_lib.arcmQueryImage.argtypes = [c_uint, ctypes.c_char_p]
+_lib.arcmQueryImage.restype = c_uint
+resource.queryImage = lambda image, property: _lib.arcmQueryImage(c_uint(image), property.encode('utf-8'))
+
+#extern uint32_t arcmQueryAudio(uint32_t sample, const char* property);
+_lib.arcmQueryAudio.argtypes = [c_uint, ctypes.c_char_p]
+_lib.arcmQueryAudio.restype = c_uint
+resource.queryAudio = lambda sample, property: _lib.arcmQueryAudio(c_uint(sample), property.encode('utf-8'))
+
+#extern float arcmQueryFont(uint32_t font, const char* property, const char* str);
+_lib.arcmQueryFont.argtypes = [c_uint, ctypes.c_char_p, ctypes.c_char_p]
+_lib.arcmQueryFont.restype = c_float
+resource.queryFont = lambda font, property, str="M": _lib.arcmQueryFont(
+    c_uint(font), property.encode('utf-8'), str.encode('utf-8'))
 
 #extern const char* arcmResourceGetStorageItem(const char* key);
 _lib.arcmResourceGetStorageItem.argtypes = [ctypes.c_char_p]
