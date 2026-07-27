@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>arcamini</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="user-scalable=no, width=device-width" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<link rel="icon" />
+	<link rel="apple-touch-icon" />
+	<link rel="manifest" href="manifest.json" />
+
+	<style type="text/css">
+body {
+	margin: 0;
+	-webkit-text-size-adjust: 100%;
+	background: black;
+	touch-action: none;
+}
+#arcamini_screens {
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+}
+#arcamini_load {
+	width: 100%;
+	height: 100%;
+	display:flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-family: monospace;
+	font-size: 20px;
+	color: white;
+	background: #222;
+}
+#arcamini_load_icon_container {
+	display:grid;
+	cursor:pointer;
+}
+#arcamini_load_icon_container > * {
+	grid-column:1;
+	grid-row:1;
+}
+#arcamini_load_icon {
+	width: 96px;
+	height:	96px;
+}
+.fade_in {
+	animation: fadeIn 3.0s linear infinite;
+}
+@keyframes fadeIn {
+	0% { opacity: 0; }
+	30% { opacity: 0; }
+	50% { opacity: 0.8; }
+	70% { opacity: 0; }
+	100% { opacity: 0; }
+}
+#arcamini_load > div {
+	padding:0.5em;
+	cursor:pointer;
+}
+#arcamini_canvas {
+	width: 100%;
+	height: 100%;
+}
+	</style>
+<!--	<script type="text/javascript">
+		if (('serviceWorker' in navigator) && (location.origin!=='file://')) {
+			navigator.serviceWorker.register('serviceworker.js', {scope:'./'})
+				.then(() => console.log('service worker installed'))
+				.catch(err => console.error('Error', err));
+		}
+	</script>-->
+</head>
+<body
+	><div id="arcamini_screens"
+		><div id="arcamini_load"
+			><div id="arcamini_load_icon_container"
+				><img id="arcamini_load_icon" src="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3e%3cg stroke='%23000' stroke-width='4'%3e%3cpath d='M24 72L4 92V24L24 4h48l20 20v68L72 72V24H24z' fill='%23af5' stroke-linejoin='round'/%3e%3cpath d='M36 36h24v24H36z' fill='%23a5f'/%3e%3c/g%3e%3cpath d='M4 92l20-20V24H4v68' fill='%235af'/%3e%3cpath d='M24 24h48V4H24v20' fill='%23ffe855'/%3e%3cpath d='M4 24h12 8v-8V4z' fill='%2396df55'/%3e%3cpath d='M72 24v48l20 20V24H72' fill='%23f5a'/%3e%3cpath d='M72 16v8h8 12L72 4z' fill='%23fa5'/%3e%3cpath d='M24 72L4 92V24L24 4h48l20 20v68L72 72V24H24z' fill='none' stroke='%23000' stroke-width='4' stroke-linejoin='round'/%3e%3c/svg%3e"
+				/><svg id="arcamini_start_icon" style="display:none;" width="96" height="96" viewbox="0 0 24 24"
+					><path style="fill:white;" d="M 5 4 l 0 16 l 16 -8 z"></path></svg>
+			</div
+			><div id="arcamini_load_title">A R C A M I N I</div
+		></div
+		><canvas id="arcamini_canvas">this webapp requires javascript to run.</canvas
+	></div
+><script type="text/javascript"> // for debugging
+window.onerror = function(msg, url, line, col, err) {
+	const stack = (err&&err.stack) ? ('\n'+err.stack) : '';
+	alert('Error at '+url+':'+line+': '+msg+stack);
+}
+</script>
+<script type="text/javascript" src="graphicsGL.js"></script>
+<script type="text/javascript" src="audio.js"></script>
+<script type="text/javascript" src="app.js"></script>
+<script type="text/javascript">
+fetch("manifest.json").then(resp=>resp.json()).then((data)=>{
+	function iconByType(data, type) {
+		if(data.icons && Array.isArray(data.icons)) {
+			for(let i=0; i<data.icons.length; ++i) {
+				const record = data.icons[i];
+				if(record.src && record.src.toLowerCase().endsWith(type))
+					return record.src;
+			}
+		}
+		if(data.icon && data.icon.toLowerCase().endsWith(type))
+			return data.icon;
+		return null;
+	}
+
+	if(data.name) {
+		document.title = data.name;
+		document.querySelector("#arcamini_load_title").innerHTML = data.name;
+	}
+
+	{
+		const favicon = document.querySelector("link[rel~='icon']");
+		const appleTouchIcon = document.querySelector("link[rel~='apple-touch-icon']");
+		const loadicon = document.querySelector("#arcamini_load_icon");
+		const svgIcon = iconByType(data, 'svg'), pngIcon = iconByType(data, 'png'), anyIcon = svgIcon || pngIcon;
+		if(!anyIcon)
+			favicon.href = loadicon.src;
+		else {
+			favicon.href = loadicon.src = anyIcon;
+			if(pngIcon)
+				appleTouchIcon.href = pngIcon;
+		}
+	}
+
+	document.querySelector("#arcamini_start_icon").style.display = '';
+	document.querySelector("#arcamini_start_icon").classList.add("fade_in");
+
+	function launch() {
+		if(data.display === 'fullscreen')
+			app.fullscreen(true);
+		arcamini.audio.resume();
+		document.getElementById('arcamini_load').style.display = 'none';
+		app._boot(data.scripts[0], app.args);
+	}
+	document.getElementById('arcamini_load').addEventListener("click", launch);
+
+	function pollGamepads(now) {
+		for(let i=0; i<2; ++i) {
+			const state = app._getGamepad(i);
+			if(state.connected && state.buttons.length && state.buttons[0])
+				return launch();
+		}
+		requestAnimationFrame(pollGamepads);
+	}
+	requestAnimationFrame(pollGamepads);
+}).catch(err => alert("this app needs to be provided by a web server"));
+</script
+></body></html>
