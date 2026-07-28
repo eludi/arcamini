@@ -19,6 +19,12 @@ Supports both pixel sprites and scalable vector graphics (SVG) for crisp visuals
 
 Primarily designed for Linux-based handheld consoles, with console-style input handling. Yet games run equally well on standard PCs.
 
+## Browser Runtime
+
+[browser_runtime/](browser_runtime/) is a JavaScript runtime implementing the same API as **arcaqjs**, backed by WebGL and Web Audio. Point a web server at the directory and any arcamini JavaScript game runs unmodified in a browser, no install or plugin required.
+
+▶️ [**Play it live**](https://eludi.github.io/arcamini/) on GitHub Pages.
+
 ## Documentation
 
 - [arcamini API reference](arcamini_api.md)
@@ -29,6 +35,7 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 - [Render performance test](./perf/)
 - [BALLATTAX](./ballattax/) game
 - [Functional tests](./test/)
+- [Browser runtime](./browser_runtime/) - Falling Blocks running in a browser via WebGL/Web Audio ([play live](https://eludi.github.io/arcamini/))
 
 ## Language-specific Extensions
 
