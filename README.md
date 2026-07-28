@@ -21,7 +21,7 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 
 ## Browser Runtime
 
-[browser_runtime/](browser_runtime/) is a JavaScript runtime implementing the same API as **arcaqjs**, backed by WebGL and Web Audio. Point a web server at the directory and any arcamini JavaScript game runs unmodified in a browser, no install or plugin required.
+[browser_runtime/](browser_runtime/) is a multi-language runtime implementing the same API as **arcamini**, backed by WebAssembly, WebGL and Web Audio. Point a web server at the directory, add your game scripts and assets, adjust the `manifest.json` scripts list,  and any arcamini game runs unmodified in a browser, no local installation or plugin required.
 
 ▶️ [**Play it live**](https://eludi.github.io/arcamini/) on GitHub Pages.
 

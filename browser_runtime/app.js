@@ -194,22 +194,48 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 		debugger;
 	};
 
-	//--- scene lifecycle ---------------------------------------------------
-	function loadScene(fname, args) {
-		if(typeof window.leave === 'function') {
-			try { window.leave(); } catch(err) { reportError(err); }
-		}
-		window.enter = window.input = window.update = window.draw = window.leave = undefined;
+	//--- CommonJS require() -- arcaqjs-specific extension (see README's
+	// "Language-specific Extensions"), not part of the cross-language
+	// arcamini_api.md surface, but needed for JS/JS parity with the native
+	// runtime. Native reads the file synchronously from the packed resource
+	// archive; the browser has no equivalent, so this uses a synchronous XHR
+	// (matching the same blocking-read trade-off already accepted for
+	// Python's import and Lua's require() support). The cache lives on
+	// `require._cache` here too, and persists across window.switchScene()
+	// calls exactly like native's does, since neither recreates the JS realm.
+	window.require = function(filename) {
+		if(filename.startsWith('./'))
+			filename = filename.substr(2);
+		if(filename in window.require._cache)
+			return window.require._cache[filename];
 
-		return fetch(fname).then((resp)=>{
-			if(!resp.ok)
-				throw new ReferenceError('window.switchScene: file not found: ' + fname);
-			return resp.text();
-		}).then((text)=>{
-			// make sure window.width()/height() already reflect the real
-			// canvas size before the script runs, since games commonly
-			// read them once at top level (as falling_blocks.js does)
-			adjustCanvasSize();
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', filename, false);
+		xhr.send(null);
+		if(xhr.status !== 200) {
+			console.error('Cannot open ' + filename);
+			return undefined;
+		}
+
+		window.require._cache[filename] = {}; // placeholder, handles circular requires
+		const wrapped = '(function(module) { let exports = module.exports; '
+			+ xhr.responseText + '; return module.exports; })({exports: {}});';
+		const result = (0, eval)(wrapped);
+		window.require._cache[filename] = result;
+		return result;
+	};
+	window.require._cache = {};
+
+	//--- scene lifecycle ---------------------------------------------------
+	// Every scripting language plugs into the same fetch/wait-for-resources/
+	// enter() sequencing below via this small driver interface -- only how a
+	// script's enter/input/update/draw/leave get invoked differs per language.
+	// jsDriver (below) is the only one wired in until a language driver (e.g.
+	// pyDriver, backed by a WASM-compiled interpreter) is registered into
+	// languageDrivers.
+	const jsDriver = {
+		load: function(text, fname) {
+			window.enter = window.input = window.update = window.draw = window.leave = undefined;
 			// inject as a classic script so top-level function declarations
 			// become real globals, exactly like the native global script eval.
 			// The sourceURL comment gives the injected script a real identity in
@@ -221,13 +247,140 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 			node.textContent = text + '\n//# sourceURL=' + fname;
 			document.head.appendChild(node);
 			document.head.removeChild(node);
+			return Promise.resolve();
+		},
+		callEnter: function(args) {
+			if(typeof window.enter === 'function')
+				window.enter(args);
+		},
+		callInput: function(evt, dev, id, val, val2) {
+			if(typeof window.input === 'function')
+				window.input(evt, dev, id, val, val2);
+		},
+		callUpdate: function(dt) {
+			// no update() defined -> stop, matching the native runtime
+			// (dispatchUpdateEvent defaults to false when update isn't a function)
+			return typeof window.update === 'function' ? window.update(dt) : false;
+		},
+		callDraw: function() {
+			if(typeof window.draw === 'function')
+				window.draw(window.gfx);
+		},
+		callLeave: function() {
+			if(typeof window.leave === 'function')
+				window.leave();
+		}
+	};
+
+	// makeWasmDriver: shared shape for any language compiled to WASM via the
+	// bindings.h dispatcher contract (initVM/shutdownVM/dispatchLifecycleEvent
+	// (Argv)/dispatchUpdateEvent/dispatchDrawEvent/dispatchAxisEvent/
+	// dispatchButtonEvent -- see bindings_arcapy_wasm.c and
+	// bindings_arcalua_wasm.c). Its ~30 window.*/gfx.*/audio.*/resource.*
+	// bindings call straight back into the exact same window.gfx/
+	// window.audio/window.resource objects above, so all of the
+	// resource-readiness (trackLoad/waitForResources) and error-reporting
+	// (reportError) machinery already built for JS applies for free -- no
+	// separate implementation needed on that side.
+	function makeWasmDriver(scriptSrc, factoryName) {
+		let Module = null, modulePromise = null, vm = 0;
+
+		function loadModule() {
+			if(modulePromise)
+				return modulePromise;
+			modulePromise = new Promise((resolve, reject)=>{
+				const node = document.createElement('script');
+				node.src = scriptSrc;
+				node.onload = ()=>{ window[factoryName]().then(resolve, reject); };
+				node.onerror = ()=> reject(new Error('failed to load ' + scriptSrc));
+				document.head.appendChild(node);
+			});
+			return modulePromise;
+		}
+		function marshalArgs(args) {
+			const ptrs = args.map((s)=> Module.allocateUTF8(String(s)));
+			const arr = Module._malloc(Math.max(1, ptrs.length) * 4);
+			ptrs.forEach((p, i)=> Module.setValue(arr + i * 4, p, 'i32'));
+			return {arr, ptrs};
+		}
+		function freeArgs(m) {
+			m.ptrs.forEach((p)=> Module._free(p));
+			Module._free(m.arr);
+		}
+
+		return {
+			load: function(text, fname) {
+				return loadModule().then((mod)=>{
+					Module = mod;
+					if(vm) {
+						Module.ccall('shutdownVM', null, ['number'], [vm]);
+						vm = 0;
+					}
+					vm = Module.ccall('initVM', 'number', ['string', 'string'], [text, fname]);
+					if(!vm)
+						throw new Error('failed to evaluate ' + fname);
+				});
+			},
+			callEnter: function(args) {
+				const m = marshalArgs(args);
+				try {
+					Module.ccall('dispatchLifecycleEventArgv', 'boolean',
+						['string', 'number', 'number', 'number'], ['enter', args.length, m.arr, vm]);
+				} finally {
+					freeArgs(m);
+				}
+			},
+			callInput: function(evt, dev, id, val, val2) {
+				const fn = (evt === 'axis') ? 'dispatchAxisEvent' : 'dispatchButtonEvent';
+				Module.ccall(fn, null, ['number', 'number', 'number', 'number'], [dev, id, val, vm]);
+			},
+			callUpdate: function(dt) {
+				return Module.ccall('dispatchUpdateEvent', 'boolean', ['number', 'number'], [dt, vm]);
+			},
+			callDraw: function() {
+				Module.ccall('dispatchDrawEvent', 'boolean', ['number'], [vm]);
+			},
+			callLeave: function() {
+				Module.ccall('dispatchLifecycleEvent', 'boolean', ['string', 'number'], ['leave', vm]);
+			}
+		};
+	}
+
+	// pyDriver: Python via a pocketpy interpreter compiled to WASM.
+	const pyDriver = makeWasmDriver('arcapy.js', 'createArcapyModule');
+	// luaDriver: Lua via a minilua interpreter compiled to WASM.
+	const luaDriver = makeWasmDriver('arcalua.js', 'createArcaluaModule');
+
+	const languageDrivers = { js: jsDriver, py: pyDriver, lua: luaDriver };
+	let currentDriver = null;
+
+	function loadScene(fname, args) {
+		if(currentDriver) {
+			try { currentDriver.callLeave(); } catch(err) { reportError(err); }
+		}
+		const ext = fname.slice(fname.lastIndexOf('.') + 1).toLowerCase();
+		const driver = languageDrivers[ext];
+		if(!driver)
+			return Promise.reject(new Error(`window.switchScene: unsupported script type ".${ext}" for "${fname}"`));
+
+		return fetch(fname).then((resp)=>{
+			if(!resp.ok)
+				throw new ReferenceError('window.switchScene: file not found: ' + fname);
+			return resp.text();
+		}).then((text)=>{
+			// make sure window.width()/height() already reflect the real
+			// canvas size before the script runs, since games commonly
+			// read them once at top level (as falling_blocks.js does)
+			adjustCanvasSize();
+			return driver.load(text, fname);
+		}).then(()=>{
 			// mirror the native runtime's synchronous resource loading: don't fire
 			// enter() until every resource requested while evaluating the script
 			// (getImage/getAudio/getFont/... called at top level) is ready
 			return new Promise((resolve)=>{ waitForResources(resolve); });
 		}).then(()=>{
-			if(typeof window.enter === 'function')
-				window.enter(args);
+			currentDriver = driver;
+			driver.callEnter(args);
 		});
 	}
 
@@ -249,14 +402,14 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 	// -> WindowEmitClose -> the loop stops and leave() runs); input() is no exception
 	function dispatchButtonEvent(device, button, value) {
 		checkCloseButtons(device, button, value);
-		if(typeof window.input === 'function') {
-			try { window.input('button', device, button, value, undefined); }
+		if(currentDriver) {
+			try { currentDriver.callInput('button', device, button, value, undefined); }
 			catch(err) { reportError(err); stopApp(); }
 		}
 	}
 	function dispatchAxisEvent(device, axis, value) {
-		if(typeof window.input === 'function') {
-			try { window.input('axis', device, axis, value, undefined); }
+		if(currentDriver) {
+			try { currentDriver.callInput('axis', device, axis, value, undefined); }
 			catch(err) { reportError(err); stopApp(); }
 		}
 	}
@@ -360,8 +513,8 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 		if(!running)
 			return;
 		running = false;
-		if(typeof window.leave === 'function') {
-			try { window.leave(); } catch(err) { reportError(err); }
+		if(currentDriver) {
+			try { currentDriver.callLeave(); } catch(err) { reportError(err); }
 		}
 	}
 
@@ -375,11 +528,9 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 		pollGamepads();
 		adjustCanvasSize();
 
-		let keepRunning = true;
-		if(typeof window.update === 'function') {
-			try { keepRunning = window.update(deltaT); }
-			catch(err) { reportError(err); keepRunning = false; }
-		}
+		let keepRunning = false;
+		try { keepRunning = currentDriver.callUpdate(deltaT); }
+		catch(err) { reportError(err); keepRunning = false; }
 		if(!keepRunning) {
 			stopApp();
 			return;
@@ -387,10 +538,8 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 
 		gfxImpl._frameBegin(clearColor[0], clearColor[1], clearColor[2]);
 		let drawFailed = false;
-		if(typeof window.draw === 'function') {
-			try { window.draw(window.gfx); }
-			catch(err) { reportError(err); drawFailed = true; }
-		}
+		try { currentDriver.callDraw(); }
+		catch(err) { reportError(err); drawFailed = true; }
 		gfxImpl._frameEnd();
 		if(drawFailed) {
 			stopApp();
@@ -411,6 +560,10 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 	//--- public app helpers used by index.html's bootstrap ---------------
 	return {
 		args: urlArgs(),
+		// exposed so non-JS language drivers (compiled to WASM, calling back
+		// into JS) can surface an interpreter-level exception exactly like a
+		// JS lifecycle-callback exception is reported
+		_reportError: reportError,
 		fullscreen: function(fullscreen) {
 			if(fullscreen) {
 				if(document.fullscreenEnabled && !document.fullscreenElement)
