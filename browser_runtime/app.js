@@ -72,7 +72,13 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 	let clearColor = [0, 0, 0];
 	let running = false;
 	let tLastFrame = 0;
-	const numControllers = 2; // reserved virtual controller slots for keyboard emulation
+	// Matches native's WindowNumControllers(): the count of *physically
+	// connected* controllers, not a fixed reserved value -- 0 on a typical
+	// keyboard-only machine, so arrow keys land on device 0 and WASD on
+	// device 1. Scripts commonly hardcode device 0 as "the" primary input
+	// (e.g. ballattax/menu.js's `inputs[0]`), so getting this wrong means
+	// keyboard input is silently ignored with no error at all.
+	const numControllers = 0;
 	const keyDeviceArrows = numControllers + 0, keyDeviceWasd = numControllers + 1;
 	const gamepadResolution = 0.1;
 	let gamepadStates = [];
