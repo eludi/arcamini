@@ -182,9 +182,13 @@ function Game.nextLevel()
     level = level + 1
     bgColor = randColor()
     for i = 1, level do
+        -- math.random needs true Lua integers: math.tointeger() alone isn't
+        -- enough since it only converts already-whole floats (e.g. 5.0) and
+        -- returns nil for a genuinely fractional one -- math.floor() is what
+        -- actually rounds, and already returns a proper integer in Lua 5.4.
         table.insert(objs, GameObject:new(
-            math.random(0, math.tointeger(vpSz)), math.random(math.tointeger(math.floor(-8*sc)), 0), sc*0.5, -- x, y, radius
-            math.random(math.tointeger(math.floor(-2*sc)), math.tointeger(math.floor(2*sc))), math.random(math.tointeger(math.floor(2*sc)), math.tointeger(math.floor(4*sc))), -- vx, vy
+            math.random(0, math.tointeger(vpSz)), math.random(math.floor(-8*sc), 0), sc*0.5, -- x, y, radius
+            math.random(math.floor(-2*sc), math.floor(2*sc)), math.random(math.floor(2*sc), math.floor(4*sc)), -- vx, vy
             0xff, TYPE_BALL))
     end
 end
