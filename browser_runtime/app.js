@@ -194,81 +194,54 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 		debugger;
 	};
 
-	//--- CommonJS require() -- arcaqjs-specific extension (see README's
-	// "Language-specific Extensions"), not part of the cross-language
-	// arcamini_api.md surface, but needed for JS/JS parity with the native
-	// runtime. Native reads the file synchronously from the packed resource
-	// archive; the browser has no equivalent, so this uses a synchronous XHR
-	// (matching the same blocking-read trade-off already accepted for
-	// Python's import and Lua's require() support). The cache lives on
-	// `require._cache` here too, and persists across window.switchScene()
-	// calls exactly like native's does, since neither recreates the JS realm.
-	window.require = function(filename) {
-		if(filename.startsWith('./'))
-			filename = filename.substr(2);
-		if(filename in window.require._cache)
-			return window.require._cache[filename];
-
-		const xhr = new XMLHttpRequest();
-		xhr.open('GET', filename, false);
-		xhr.send(null);
-		if(xhr.status !== 200) {
-			console.error('Cannot open ' + filename);
-			return undefined;
-		}
-
-		window.require._cache[filename] = {}; // placeholder, handles circular requires
-		const wrapped = '(function(module) { let exports = module.exports; '
-			+ xhr.responseText + '; return module.exports; })({exports: {}});';
-		const result = (0, eval)(wrapped);
-		window.require._cache[filename] = result;
-		return result;
-	};
-	window.require._cache = {};
-
 	//--- scene lifecycle ---------------------------------------------------
 	// Every scripting language plugs into the same fetch/wait-for-resources/
 	// enter() sequencing below via this small driver interface -- only how a
 	// script's enter/input/update/draw/leave get invoked differs per language.
-	// jsDriver (below) is the only one wired in until a language driver (e.g.
-	// pyDriver, backed by a WASM-compiled interpreter) is registered into
-	// languageDrivers.
+	let jsModule = {}; // the currently active JS scene's module namespace
+	let jsLoadCounter = 0;
 	const jsDriver = {
 		load: function(text, fname) {
-			window.enter = window.input = window.update = window.draw = window.leave = undefined;
-			// inject as a classic script so top-level function declarations
-			// become real globals, exactly like the native global script eval.
-			// The sourceURL comment gives the injected script a real identity in
-			// DevTools (Sources panel, stack traces, breakpoints by filename)
-			// instead of showing up as an anonymous <anonymous>/VM script, and
-			// keeps it visibly separate from the framework files (app.js etc.)
-			// that were loaded via <script src> and already have real names.
-			const node = document.createElement('script');
-			node.textContent = text + '\n//# sourceURL=' + fname;
-			document.head.appendChild(node);
-			document.head.removeChild(node);
-			return Promise.resolve();
+			// Real dynamic import(), matching the native runtime's move to ES
+			// modules (bindings_arcaqjs.c): enter/input/update/draw/leave are
+			// read from the module's exports, not the global object, and any
+			// `import ... from './helper.js'` inside the game script is
+			// resolved natively by the browser -- no custom loader needed
+			// here at all, unlike the WASM-hosted Python/Lua interpreters.
+			// `text` (already fetched by loadScene for the file-not-found
+			// check shared across all three drivers) isn't used here; the
+			// browser fetches/caches the module itself as part of import().
+			//
+			// The query-string suffix forces a *fresh* module instance on
+			// every load, matching native's switchScene() always
+			// re-evaluating the entry script from scratch even for a
+			// filename already seen. Nested imports inside the loaded
+			// module aren't affected by this and resolve/cache normally --
+			// matching native's dependency-module caching within one VM.
+			return import('./' + fname + '?_t=' + (++jsLoadCounter)).then((mod)=>{
+				jsModule = mod;
+			});
 		},
 		callEnter: function(args) {
-			if(typeof window.enter === 'function')
-				window.enter(args);
+			if(typeof jsModule.enter === 'function')
+				jsModule.enter(args);
 		},
 		callInput: function(evt, dev, id, val, val2) {
-			if(typeof window.input === 'function')
-				window.input(evt, dev, id, val, val2);
+			if(typeof jsModule.input === 'function')
+				jsModule.input(evt, dev, id, val, val2);
 		},
 		callUpdate: function(dt) {
 			// no update() defined -> stop, matching the native runtime
 			// (dispatchUpdateEvent defaults to false when update isn't a function)
-			return typeof window.update === 'function' ? window.update(dt) : false;
+			return typeof jsModule.update === 'function' ? jsModule.update(dt) : false;
 		},
 		callDraw: function() {
-			if(typeof window.draw === 'function')
-				window.draw(window.gfx);
+			if(typeof jsModule.draw === 'function')
+				jsModule.draw(window.gfx);
 		},
 		callLeave: function() {
-			if(typeof window.leave === 'function')
-				window.leave();
+			if(typeof jsModule.leave === 'function')
+				jsModule.leave();
 		}
 	};
 

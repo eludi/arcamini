@@ -52,7 +52,7 @@ function adjustNumObj(count) {
 
 
 let prevAxisY = 0;
-function input(evt,device,id,value,value2) {
+export function input(evt,device,id,value,value2) {
 	if (evt === 'axis' && id === 1) {
 		if(value === -1.0) {
 			if(numObj>objCounts[0]) {
@@ -76,7 +76,7 @@ function input(evt,device,id,value,value2) {
 	}
 }
 
-function update(deltaT) {
+export function update(deltaT) {
 	now += deltaT;
 	for(let i=0; i<numObj; ++i) {
 		const obj = objs[i];
@@ -105,7 +105,7 @@ function update(deltaT) {
 	return true;
 }
 
-function draw(gfx) {
+export function draw(gfx) {
 	// scene:
 	for(let i=0; i<numObj; ++i)
 		objs[i].draw(gfx);

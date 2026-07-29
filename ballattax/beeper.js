@@ -56,4 +56,4 @@ class Beeper {
     }
 }
 
-module.exports = new Beeper();
+export default new Beeper();

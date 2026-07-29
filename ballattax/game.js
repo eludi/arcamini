@@ -1,6 +1,8 @@
 // game.js - Arcaqjs/QuickJS port
 
-const beeper = require('beeper.js');
+import beeper from './beeper.js';
+import { switchScene } from './scene_manager.js';
+import menuScene from './menu.js';
 
 let vpSz = 0, ox = 0, oy = 0, sc = 1;
 let score = 0, highScore = 0, level = 0, delay = 0;
@@ -175,7 +177,7 @@ const Game = {
             saveHighscore(highScore);
         }
         if (!restart) {
-            return switchScene(require('./menu.js'));
+            return switchScene(menuScene);
         }
         score = 0;
         level = 0;
@@ -277,4 +279,4 @@ const Game = {
     }
 };
 
-module.exports = Game;
+export default Game;

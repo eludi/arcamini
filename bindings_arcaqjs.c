@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <math.h>
 
-extern void* ResourceGetBinary(const char* name, size_t* numBytes);
-
 // --- helper functions ---
 static const char* js_print_exception(JSContext *ctx, JSValueConst exc) {
     if (JS_IsNull(exc) || JS_IsUndefined(exc))
@@ -184,99 +182,64 @@ static float* getFloatArray(JSContext *ctx, JSValueConst arr, size_t *num_elems)
     return buf;
 }
 
-static JSValue require_cache_lookup(JSContext *ctx, const char* key) {
-    //fprintf(stderr, "Module cache lookup: %s\n", key);
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue require_func = JS_GetPropertyStr(ctx, global, "require");
-    JSValue cache = JS_GetPropertyStr(ctx, require_func, "_cache");
-    JS_FreeValue(ctx, require_func);
-    JS_FreeValue(ctx, global);
-    if (!JS_IsUndefined(cache)) {
-        JSValue cached = JS_GetPropertyStr(ctx, cache, key);
-        JS_FreeValue(ctx, cache);
-        //fprintf(stderr, "Module cache lookup: %s %s\n", key , JS_IsUndefined(cached) ? "miss" : "hit");
-        return cached; // owned by caller
-    }
-    return JS_UNDEFINED;
-}
-
-static void require_cache_insert(JSContext *ctx, const char* key, JSValue val) {
-    //fprintf(stderr, "Module cache insert: %s\n", key);
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue require_func = JS_GetPropertyStr(ctx, global, "require");
-    JSValue cache = JS_GetPropertyStr(ctx, require_func, "_cache");
-    if (JS_IsUndefined(cache)) {
-        cache = JS_NewObject(ctx);
-        JS_SetPropertyStr(ctx, require_func, "_cache", JS_DupValue(ctx, cache));
-    }
-    JS_SetPropertyStr(ctx, cache, key, JS_DupValue(ctx, val));
-    JS_FreeValue(ctx, cache);
-    JS_FreeValue(ctx, require_func);
-    JS_FreeValue(ctx, global);
-}
-
-// Load a script file and evaluate it
-static JSValue require(JSContext *ctx, const char *filename) {
-    if(filename && filename[0] == '.' && filename[1] == '/') {
-        filename += 2;
-    }
-    // Check cache first
-    JSValue cached = require_cache_lookup(ctx, filename);
-    if (!JS_IsUndefined(cached))
-        return cached;
-
-    size_t script_len;
-    char* script = (char*)ResourceGetBinary(filename, &script_len); 
+// Standard ES module loader: called by the engine for every static or
+// dynamic `import` specifier. Compiles the referenced file as a module and
+// hands ownership of the resulting JSModuleDef to the module registry --
+// note the JS_FreeValue below on the *wrapper* JSValue once its raw pointer
+// has been extracted: the module registry keeps its own reference to the
+// JSModuleDef independent of that wrapper's refcount, so without this the
+// wrapper leaks and JS_FreeRuntime asserts on shutdown (found by testing a
+// standalone reproduction of this exact loader before wiring it in here).
+static JSModuleDef *js_module_loader(JSContext *ctx, const char *module_name, void *opaque) {
+    // ResourceGetText (not ResourceGetBinary) matches initVM's proven-working
+    // pattern below: ResourceGetBinary's numBytes includes a defensive
+    // trailing NUL, which JS_Eval then tries to tokenize as a stray
+    // character at end-of-source ("SyntaxError: unexpected character").
+    char *script = (char*)ResourceGetText(module_name);
     if (!script) {
-        fprintf(stderr, "Cannot open %s\n", filename);
-        return JS_UNDEFINED;
+        JS_ThrowReferenceError(ctx, "could not load module '%s'", module_name);
+        return NULL;
     }
-
-    const char wrapper_prefix[] = "(function(module) { let exports = module.exports; ";
-    const char wrapper_suffix[] = "; return module.exports; })({exports: {}});";
-    const size_t wrapper_prefix_len = sizeof(wrapper_prefix) - 1;
-    const size_t wrapper_suffix_len = sizeof(wrapper_suffix) - 1;
-    const size_t buf_len = wrapper_prefix_len + script_len + wrapper_suffix_len;
-
-    char *buf = malloc(buf_len+1);
-    if (!buf) {
-        free(script);
-        fprintf(stderr, "Memory allocation failed\n");
-        return JS_UNDEFINED;
-    }
-
-    memcpy(buf, wrapper_prefix, wrapper_prefix_len);
-    memcpy(buf + wrapper_prefix_len, script, script_len);
+    JSValue func_val = JS_Eval(ctx, script, strlen(script), module_name,
+        JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
     free(script);
-    memcpy(buf + wrapper_prefix_len + script_len, wrapper_suffix, wrapper_suffix_len);
-    buf[buf_len] = '\0';
-
-    // Insert placeholder before evaluation in case of circular dependencies
-    JSValue placeholder = JS_NewObject(ctx);
-    require_cache_insert(ctx, filename, placeholder);
-    JS_FreeValue(ctx, placeholder); // cache keeps its dup
-
-    JSValue ret = JS_Eval(ctx, buf, buf_len, filename, JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
-    free(buf);
-
-    if (JS_IsException(ret)) {
-        handleException(ctx);
-        JS_FreeValue(ctx, ret);
-        return JS_UNDEFINED;
-    }
-    require_cache_insert(ctx, filename, ret);
-    return ret;
+    if (JS_IsException(func_val))
+        return NULL;
+    JSModuleDef *m = JS_VALUE_GET_PTR(func_val);
+    JS_FreeValue(ctx, func_val);
+    return m;
 }
 
-static JSValue js_require(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-    if (argc < 1) return JS_UNDEFINED;
+// The entry script's exports -- enter/input/update/draw/leave are looked up
+// here instead of on the global object, since ES modules (unlike classic
+// scripts) don't leak their top-level declarations onto globalThis. Replaced
+// wholesale on every window.switchScene() call.
+static JSValue lifecycle_ns;
 
-    const char *filename = JS_ToCString(ctx, argv[0]);
-    if (!filename) return JS_UNDEFINED;
+// Compiles and runs `script` as an ES module, then points lifecycle_ns at
+// its exports. Returns false on failure, leaving the exception pending on
+// ctx for the caller to report (each call site -- initVM vs switchScene --
+// already has its own error-reporting convention).
+static bool loadLifecycleModule(JSContext *ctx, const char *script, size_t script_len, const char *scriptName) {
+    JSValue compiled = JS_Eval(ctx, script, script_len, scriptName,
+        JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+    if (JS_IsException(compiled))
+        return false;
+    JSModuleDef *m = JS_VALUE_GET_PTR(compiled);
 
-    JSValue exports_obj = require(ctx, filename);  // call our C-side require()
-    JS_FreeCString(ctx, filename);
-    return exports_obj;
+    JSValue result = JS_EvalFunction(ctx, compiled); // consumes `compiled`
+    if (JS_IsException(result)) {
+        JS_FreeValue(ctx, result);
+        return false;
+    }
+    JS_FreeValue(ctx, result);
+
+    JSValue ns = JS_GetModuleNamespace(ctx, m);
+    if (JS_IsException(ns))
+        return false;
+    JS_FreeValue(ctx, lifecycle_ns);
+    lifecycle_ns = ns;
+    return true;
 }
 
 // --- Window bindings ---
@@ -332,16 +295,10 @@ static JSValue js_WindowSwitchScene(JSContext *ctx, JSValueConst this_val, int a
 
     // Call leave event on current script
     dispatchLifecycleEvent("leave", ctx);
-    // Clear current callbacks:
-    JSValue global = JS_GetGlobalObject(ctx);
-    JS_SetPropertyStr(ctx, global, "enter", JS_UNDEFINED);
-    JS_SetPropertyStr(ctx, global, "input", JS_UNDEFINED);
-    JS_SetPropertyStr(ctx, global, "update", JS_UNDEFINED);
-    JS_SetPropertyStr(ctx, global, "draw", JS_UNDEFINED);
-    JS_SetPropertyStr(ctx, global, "leave", JS_UNDEFINED);
-    JS_FreeValue(ctx, global);
 
-    // Load new script
+    // Load new script (as an ES module -- clearing the old enter/input/
+    // update/draw/leave bindings isn't needed anymore: those are read from
+    // lifecycle_ns, which loadLifecycleModule() below replaces wholesale)
     char *script = (char *)ResourceGetText(fname);
     if (!script) {
         JS_FreeCString(ctx, fname);
@@ -352,15 +309,12 @@ static JSValue js_WindowSwitchScene(JSContext *ctx, JSValueConst this_val, int a
         return JS_ThrowReferenceError(ctx, "window.switchScene: file not found");
     }
 
-    // Evaluate new script
-    JSValue ret = JS_Eval(ctx, script, strlen(script), fname, JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
+    bool ok = loadLifecycleModule(ctx, script, strlen(script), fname);
     free(script);
-
     JS_FreeCString(ctx, fname);
-    if (JS_IsException(ret)) {
+
+    if (!ok)
         handleException(ctx);
-        JS_FreeValue(ctx, ret);
-    }
     else dispatchLifecycleEventArgv("enter", numArgs, args, ctx); // Dispatch enter event with arguments
     if (args) {
         for (int i = 0; i < numArgs; ++i) free(args[i]);
@@ -850,14 +804,13 @@ static JSValue js_console_err(JSContext *ctx, JSValueConst this_val, int argc, J
 }
 
 
-static void bindConsoleRequire(JSContext *ctx) {
+static void bindConsole(JSContext *ctx) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log", JS_NewCFunction(ctx, js_console_log, "log", 1));
     JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_console_err, "error", 1));
     JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_console_err, "warn", 1));
     JS_SetPropertyStr(ctx, global, "console", console);
-    JS_SetPropertyStr(ctx, global, "require", JS_NewCFunction(ctx, js_require, "require", 1));
 
     JS_FreeValue(ctx, global);
 }
@@ -872,25 +825,22 @@ void* initVM(const char* script, const char* scriptName) {
         JS_FreeRuntime(rt);
         return NULL;
     }
+    JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
+    lifecycle_ns = JS_UNDEFINED; // static var has no compile-time-constant initializer available
 
     // Initialize our bindings
     bindArcamini(ctx);
-    bindConsoleRequire(ctx);
+    bindConsole(ctx);
 
-    // Evaluate user script
-    JSValue main_ns = JS_Eval(ctx, script, strlen(script), scriptName,
-        JS_EVAL_TYPE_GLOBAL | JS_EVAL_FLAG_STRICT);
-
-    if (JS_IsException(main_ns)) {
+    // Evaluate user script as an ES module (see loadLifecycleModule)
+    if (!loadLifecycleModule(ctx, script, strlen(script), scriptName)) {
         JSValue exc = JS_GetException(ctx);
         js_print_exception(ctx, exc);
         JS_FreeValue(ctx, exc);
-        JS_FreeValue(ctx, main_ns);
         shutdownVM(ctx);
         return NULL;
     }
 
-    JS_FreeValue(ctx, main_ns);
     return (void*)ctx;
 }
 
@@ -899,7 +849,12 @@ void shutdownVM(void* context) {
     JSContext* ctx = (JSContext*)context;
     JSRuntime* rt = JS_GetRuntime(ctx);
     JS_FreeValue(ctx, gfx_ns);
+    JS_FreeValue(ctx, lifecycle_ns);
+    lifecycle_ns = JS_UNDEFINED;
     JS_FreeContext(ctx);
+    // module namespace objects and their closures form reference cycles
+    // that plain refcounting can't collect on its own.
+    JS_RunGC(rt);
     JS_FreeRuntime(rt);
 }
 
@@ -907,11 +862,10 @@ void shutdownVM(void* context) {
 
 bool dispatchLifecycleEvent(const char* evtName, void* callback) {
     JSContext *ctx = (JSContext*)callback;
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, evtName);
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, evtName);
     bool ok = true;
     if (JS_IsFunction(ctx, fn)) {
-        JSValue ret = JS_Call(ctx, fn, global, 0, NULL);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 0, NULL);
         if (JS_IsException(ret)) {
             handleException(ctx);
             ok = false;
@@ -919,21 +873,19 @@ bool dispatchLifecycleEvent(const char* evtName, void* callback) {
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
     return ok;
 }
 
 bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void* callback) {
     JSContext *ctx = (JSContext*)callback;
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, evtName);
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, evtName);
     bool ok = true;
     if (JS_IsFunction(ctx, fn)) {
         JSValue args_array = JS_NewArray(ctx);
         for (int i = 0; i < argc; ++i)
             JS_SetPropertyUint32(ctx, args_array, i, JS_NewString(ctx, argv[i]));
         JSValue argv[1] = { args_array };
-        JSValue ret = JS_Call(ctx, fn, global, 1, argv);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 1, argv);
         if (JS_IsException(ret)) {
             handleException(ctx);
             ok = false;
@@ -942,14 +894,12 @@ bool dispatchLifecycleEventArgv(const char* evtName, int argc, char** argv, void
         JS_FreeValue(ctx, args_array);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
     return ok;
 }
 
 void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
     JSContext *ctx = (JSContext*)callback;
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, "input");
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, "input");
     if (JS_IsFunction(ctx, fn)) {
         JSValue evt = JS_NewString(ctx, "axis");
         JSValue device = JS_NewUint32(ctx, (uint32_t)id);
@@ -958,7 +908,7 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
         JSValue val2 = JS_UNDEFINED;
 
         JSValue argv[5] = { evt, device, id, val, val2 };
-        JSValue ret = JS_Call(ctx, fn, global, 5, argv);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 5, argv);
         if (JS_IsException(ret))
             handleException(ctx);
         JS_FreeValue(ctx, ret);
@@ -968,15 +918,13 @@ void dispatchAxisEvent(size_t id, uint8_t axis, float value, void* callback) {
         JS_FreeValue(ctx, val);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
 }
 
 void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback) {
     JSContext *ctx = (JSContext*)callback;
     arcmWindowCloseOnButton67(id, button, value);
 
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, "input");
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, "input");
     if (JS_IsFunction(ctx, fn)) {
         JSValue evt = JS_NewString(ctx, "button");
         JSValue device = JS_NewUint32(ctx, (uint32_t)id);
@@ -985,7 +933,7 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
         JSValue val2 = JS_UNDEFINED;
 
         JSValue argv[5] = { evt, device, id, val, val2 };
-        JSValue ret = JS_Call(ctx, fn, global, 5, argv);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 5, argv);
         if (JS_IsException(ret))
             handleException(ctx);
         JS_FreeValue(ctx, ret);
@@ -995,18 +943,15 @@ void dispatchButtonEvent(size_t id, uint8_t button, float value, void* callback)
         JS_FreeValue(ctx, val);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
 }
 
 bool dispatchUpdateEvent(double deltaT, void* callback) {
     JSContext *ctx = (JSContext*)callback;
-    JSValue global = JS_GetGlobalObject(ctx);
-    //JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, "update");
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, "update");
     bool keepRunning = false;
     if (JS_IsFunction(ctx, fn)) {
         JSValue argv[1] = { JS_NewFloat64(ctx, deltaT) };
-        JSValue ret = JS_Call(ctx, fn, global, 1, argv);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 1, argv);
         if (JS_IsException(ret))
             handleException(ctx);
         else {
@@ -1017,21 +962,18 @@ bool dispatchUpdateEvent(double deltaT, void* callback) {
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
     return keepRunning;
 }
 
 void dispatchDrawEvent(void* callback) {
     JSContext *ctx = (JSContext*)callback;
-    JSValue global = JS_GetGlobalObject(ctx);
-    JSValue fn = JS_GetPropertyStr(ctx, global, "draw");
+    JSValue fn = JS_GetPropertyStr(ctx, lifecycle_ns, "draw");
     if (JS_IsFunction(ctx, fn)) {
         JSValue argv[1] = { gfx_ns }; // pass gfx namespace as argument
-        JSValue ret = JS_Call(ctx, fn, global, 1, argv);
+        JSValue ret = JS_Call(ctx, fn, JS_UNDEFINED, 1, argv);
         if (JS_IsException(ret))
             handleException(ctx);
         JS_FreeValue(ctx, ret);
     }
     JS_FreeValue(ctx, fn);
-    JS_FreeValue(ctx, global);
 }

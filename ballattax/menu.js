@@ -1,6 +1,8 @@
 // menu.js - Arcaqjs/QuickJS port
 
-const beeper = require('beeper.js');
+import beeper from './beeper.js';
+import { switchScene } from './scene_manager.js';
+import gameScene from './game.js';
 const bgColor = 0xFF4080FF;
 const winSzX = window.width();
 const winSzY = window.height();
@@ -19,7 +21,7 @@ function triggerMenuEvent(index) {
         running = false;
         return;
     }
-    switchScene(require('./game.js'), { players: index + 1 });
+    switchScene(gameScene, { players: index + 1 });
 }
 
 const scene = {
@@ -61,4 +63,4 @@ const scene = {
     }
 };
 
-module.exports = scene;
+export default scene;

@@ -40,7 +40,7 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 ## Language-specific Extensions
 
 All arcamini variants support the same core APIs. Additional features:
-- **arcaqjs:** Node.js-like `require()` for CommonJS modules, `console.log()`/`.warn()`/`.error()` for output.
+- **arcaqjs:** browser-like `console.log()`/`.warn()`/`.error()` for output.
 
 ## License
 

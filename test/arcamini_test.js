@@ -17,7 +17,7 @@ console.log("Storage value:", val);
 
 let frame = 0;
 
-function enter(args) {
+export function enter(args) {
     console.log("enter called, args:", args);
     console.log("window dimensions:", window.width(), window.height());
     window.color(0x000055ff);
@@ -37,18 +37,18 @@ function enter(args) {
     console.log("query font default str:", resource.queryFont(font, "width"));
 }
 
-function input(evt, device, id, value, value2) {
+export function input(evt, device, id, value, value2) {
     console.log(`input(${evt}, ${device}, ${id}, ${value}, ${value2})`);
 }
 
-function update(deltaT) {
+export function update(deltaT) {
     if (frame < 2) {
         console.log(`update called with deltaT ${deltaT} at frame ${frame}`);
     }
     return true;
 }
 
-function draw(gfx) {
+export function draw(gfx) {
     gfx.color(0xFF0000FF);
     gfx.lineWidth(2.0);
     gfx.fillRect(120, 10, 100, 50);
@@ -73,6 +73,6 @@ function draw(gfx) {
     frame += 1;
 }
 
-function leave() {
+export function leave() {
     console.log("leave called");
 }
