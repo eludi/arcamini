@@ -6,6 +6,15 @@
 // enter/input/update/draw/leave defined by the game script, and global
 // window/gfx/audio/resource namespaces + breakpoint() provided here.
 let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
+	// Captured now, synchronously, while this classic <script> is still the
+	// one executing: index.html's ?game=<dir>/ handling (a later inline
+	// <script>) rewrites the page's <base href> to the active game's
+	// directory, so any *relative* URL resolved after that point -- e.g. a
+	// lazily-created <script src="arcapy.js">, way down in makeWasmDriver --
+	// would otherwise incorrectly resolve against the game's directory
+	// instead of browser_runtime/, where the WASM driver files actually
+	// live regardless of which game is running.
+	const frameworkBaseUrl = document.currentScript ? document.currentScript.src : document.baseURI;
 	const canvas = document.getElementById(canvas_id);
 
 	// The native runtime loads resources synchronously/blocking, so a script's
@@ -263,7 +272,7 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 				return modulePromise;
 			modulePromise = new Promise((resolve, reject)=>{
 				const node = document.createElement('script');
-				node.src = scriptSrc;
+				node.src = new URL(scriptSrc, frameworkBaseUrl).href;
 				node.onload = ()=>{ window[factoryName]().then(resolve, reject); };
 				node.onerror = ()=> reject(new Error('failed to load ' + scriptSrc));
 				document.head.appendChild(node);
