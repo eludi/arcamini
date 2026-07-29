@@ -21,7 +21,7 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 
 ## Browser Runtime
 
-[browser_runtime/](browser_runtime/) is a multi-language runtime implementing the same API as **arcamini**, backed by WebAssembly, WebGL and Web Audio. Point a web server at the directory, add your game scripts and assets, adjust the `manifest.json` scripts list,  and any arcamini game runs unmodified in a browser, no local installation or plugin required.
+The [browser runtime](browser_runtime/) is a multi-language runtime implementing the same API as **arcamini**, backed by WebAssembly, WebGL and Web Audio. Point a web server at the directory, add your game scripts and assets, adjust the `manifest.json` scripts list,  and any arcamini game runs unmodified in a browser, no local installation or plugin required.
 
 ## Examples
 
@@ -29,7 +29,6 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 - [Render performance test](./perf/)
 - [BALLATTAX](./ballattax/) game - play live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_lua.json)
 - [Functional tests](./test/) ([run live](https://eludi.github.io/arcamini/browser_runtime/?game=../test/), JS)
-- [Browser runtime](./browser_runtime/) - multi-language runtime backed by WebGL/Web Audio, powering all the live demos linked above
 
 ## Documentation
 
