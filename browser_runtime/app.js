@@ -227,7 +227,17 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 			// filename already seen. Nested imports inside the loaded
 			// module aren't affected by this and resolve/cache normally --
 			// matching native's dependency-module caching within one VM.
-			return import('./' + fname + '?_t=' + (++jsLoadCounter)).then((mod)=>{
+			//
+			// Resolved explicitly against document.baseURI (which *is* live
+			// and follows index.html's ?game=<dir>/ <base href> rewrite),
+			// rather than passed as a bare relative specifier: a dynamic
+			// import() from a classic (non-module) script like this one
+			// resolves relative specifiers against the *script's own* fixed
+			// URL (browser_runtime/app.js) instead, which would send every
+			// game loaded via ?game= looking for its entry script in
+			// browser_runtime/ instead of its own directory.
+			const url = new URL(fname + '?_t=' + (++jsLoadCounter), document.baseURI).href;
+			return import(url).then((mod)=>{
 				jsModule = mod;
 			});
 		},
