@@ -244,14 +244,26 @@ EM_JS(int, js_ResourceCreateAudio, (const float* data, int numSamples, int numCh
 EM_JS(int, js_ResourceGetFont, (const char* name, uint32_t fontSize), {
     return window.resource.getFont(UTF8ToString(name), fontSize);
 });
+// These three wrap their JS call in try/catch and return a sentinel (0, or
+// NaN for the float-returning queryFont) instead of letting the underlying
+// exception (window.resource.query*() throws on an invalid handle/property)
+// propagate raw: a JS exception thrown inside an EM_JS body unwinds straight
+// through the WASM/C call stack -- including Lua's own interpreter loop
+// frames -- back out to the JS caller of Module.ccall(), completely
+// bypassing Lua's pcall-based error handling. The C wrappers below convert
+// the sentinel into a proper Lua error instead, exactly matching native
+// bindings_arcalua.c.
 EM_JS(int, js_ResourceQueryImage, (uint32_t image, const char* property), {
-    return window.resource.queryImage(image, UTF8ToString(property));
+    try { return window.resource.queryImage(image, UTF8ToString(property)); }
+    catch(e) { return 0; }
 });
 EM_JS(int, js_ResourceQueryAudio, (uint32_t sample, const char* property), {
-    return window.resource.queryAudio(sample, UTF8ToString(property));
+    try { return window.resource.queryAudio(sample, UTF8ToString(property)); }
+    catch(e) { return 0; }
 });
 EM_JS(double, js_ResourceQueryFont, (uint32_t font, const char* property, const char* str), {
-    return window.resource.queryFont(font, UTF8ToString(property), UTF8ToString(str));
+    try { return window.resource.queryFont(font, UTF8ToString(property), UTF8ToString(str)); }
+    catch(e) { return NaN; }
 });
 EM_JS(char*, js_ResourceGetStorageItem, (const char* key), {
     var val = window.resource.getStorageItem(UTF8ToString(key));
@@ -374,6 +386,8 @@ static int lua_resourceQueryImage(lua_State *L) {
     uint32_t image = (uint32_t)luaL_checkinteger(L, 1);
     const char* property = luaL_checkstring(L, 2);
     int value = js_ResourceQueryImage(image, property);
+    if(!value)
+        return luaL_error(L, "resource.queryImage(%d, '%s') failed: invalid image handle or unrecognized property", image, property);
     lua_pushinteger(L, value);
     return 1;
 }
@@ -382,6 +396,8 @@ static int lua_resourceQueryAudio(lua_State *L) {
     uint32_t sample = (uint32_t)luaL_checkinteger(L, 1);
     const char* property = luaL_checkstring(L, 2);
     int value = js_ResourceQueryAudio(sample, property);
+    if(!value)
+        return luaL_error(L, "resource.queryAudio(%d, '%s') failed: invalid audio handle or unrecognized property", sample, property);
     lua_pushinteger(L, value);
     return 1;
 }
@@ -391,6 +407,8 @@ static int lua_resourceQueryFont(lua_State *L) {
     const char* property = luaL_checkstring(L, 2);
     const char* str = luaL_optstring(L, 3, "M");
     double value = js_ResourceQueryFont(font, property, str);
+    if(isnan(value))
+        return luaL_error(L, "resource.queryFont(%d, '%s') failed: invalid font handle or unrecognized property", font, property);
     lua_pushnumber(L, value);
     return 1;
 }

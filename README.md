@@ -28,7 +28,7 @@ The [browser runtime](browser_runtime/) is a multi-language runtime implementing
 - [mini games](./minigames/) - Falling Blocks ([play live](https://eludi.github.io/arcamini/browser_runtime/), JS), Box Breaker ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_box_breaker.json), Python), Flappy Box ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_flappy_box.json), Python), Snake ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_snake.json), Python) - each in just about 40-60 lines of code
 - [Render performance test](./perf/)
 - [BALLATTAX](./ballattax/) game - play live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_lua.json)
-- [Functional tests](./test/) ([run live](https://eludi.github.io/arcamini/browser_runtime/?game=../test/), JS)
+- [Functional tests](./test/) - run live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../test/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../test/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../test/&manifest=manifest_lua.json)
 
 ## Documentation
 

@@ -1,0 +1,15 @@
+{
+	"name":"ARCAMINI Functional Tests (Lua)",
+	"start_url": "./",
+	"display":"window",
+	"icon": "arcamini_icon.svg",
+	"icons": [
+		{ "src":"arcamini_icon.svg", "sizes":"any", "purpose":"maskable"} ],
+	"window_width": 640,
+	"window_height": 480,
+	"audio_tracks": 4,
+	"scripts":[ "arcamini_test.lua" ],
+	"orientation": "landscape",
+	"background_color": "black",
+	"theme_color": "black"
+}

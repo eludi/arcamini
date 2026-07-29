@@ -301,14 +301,27 @@ EM_JS(int, js_ResourceCreateAudio, (const float* data, int numSamples, int numCh
 EM_JS(int, js_ResourceGetFont, (const char* name, uint32_t fontSize), {
     return window.resource.getFont(UTF8ToString(name), fontSize);
 });
+// These three wrap their JS call in try/catch and return a sentinel (0, or
+// NaN for the float-returning queryFont) instead of letting the underlying
+// exception (window.resource.query*() throws on an invalid handle/property)
+// propagate raw: a JS exception thrown inside an EM_JS body unwinds straight
+// through the WASM/C call stack -- including pocketpy's own interpreter loop
+// frames -- back out to the JS caller of Module.ccall(), completely
+// bypassing pocketpy's try/except mechanism (found via arcamini_test.py's
+// own try/except around a deliberate invalid-handle call not catching
+// anything). The C wrappers below convert the sentinel into a proper
+// pocketpy exception instead, exactly matching native bindings_arcapy.c.
 EM_JS(int, js_ResourceQueryImage, (uint32_t image, const char* property), {
-    return window.resource.queryImage(image, UTF8ToString(property));
+    try { return window.resource.queryImage(image, UTF8ToString(property)); }
+    catch(e) { return 0; }
 });
 EM_JS(int, js_ResourceQueryAudio, (uint32_t sample, const char* property), {
-    return window.resource.queryAudio(sample, UTF8ToString(property));
+    try { return window.resource.queryAudio(sample, UTF8ToString(property)); }
+    catch(e) { return 0; }
 });
 EM_JS(double, js_ResourceQueryFont, (uint32_t font, const char* property, const char* str), {
-    return window.resource.queryFont(font, UTF8ToString(property), UTF8ToString(str));
+    try { return window.resource.queryFont(font, UTF8ToString(property), UTF8ToString(str)); }
+    catch(e) { return NaN; }
 });
 EM_JS(char*, js_ResourceGetStorageItem, (const char* key), {
     var val = window.resource.getStorageItem(UTF8ToString(key));
@@ -487,6 +500,8 @@ static bool py_ResourceQueryImage(int argc, py_StackRef argv) {
         return false;
     const char* property = py_tostr(py_arg(1));
     int value = js_ResourceQueryImage((uint32_t)image, property);
+    if(!value)
+        return ValueError("resource.queryImage(%i, '%s') failed: invalid image handle or unrecognized property\n", image, property);
     py_newint(py_retval(), (int64_t)value);
     return true;
 }
@@ -498,6 +513,8 @@ static bool py_ResourceQueryAudio(int argc, py_StackRef argv) {
         return false;
     const char* property = py_tostr(py_arg(1));
     int value = js_ResourceQueryAudio((uint32_t)sample, property);
+    if(!value)
+        return ValueError("resource.queryAudio(%i, '%s') failed: invalid audio handle or unrecognized property\n", sample, property);
     py_newint(py_retval(), (int64_t)value);
     return true;
 }
@@ -509,6 +526,8 @@ static bool py_ResourceQueryFont(int argc, py_StackRef argv) {
     const char* property = py_tostr(py_arg(1));
     const char* str = argc > 2 ? py_tostr(py_arg(2)) : "M";
     double value = js_ResourceQueryFont((uint32_t)font, property, str);
+    if(isnan(value))
+        return ValueError("resource.queryFont(%i, '%s') failed: invalid font handle or unrecognized property\n", font, property);
     py_newfloat(py_retval(), value);
     return true;
 }
