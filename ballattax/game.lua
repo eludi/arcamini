@@ -183,8 +183,8 @@ function Game.nextLevel()
     bgColor = randColor()
     for i = 1, level do
         table.insert(objs, GameObject:new(
-            math.random(0, vpSz), math.random(math.floor(-8*sc), 0), sc*0.5, -- x, y, radius
-            math.random(math.floor(-2*sc), math.floor(2*sc)), math.random(math.floor(2*sc), math.floor(4*sc)), -- vx, vy
+            math.random(0, math.tointeger(vpSz)), math.random(math.tointeger(math.floor(-8*sc)), 0), sc*0.5, -- x, y, radius
+            math.random(math.tointeger(math.floor(-2*sc)), math.tointeger(math.floor(2*sc))), math.random(math.tointeger(math.floor(2*sc)), math.tointeger(math.floor(4*sc))), -- vx, vy
             0xff, TYPE_BALL))
     end
 end
