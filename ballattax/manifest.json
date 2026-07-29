@@ -1,14 +1,14 @@
 {
-	"name":"ARCAMINI Falling Blocks (JS)",
+	"name":"BALLATTAX (JS)",
 	"start_url": "./",
 	"display":"window",
-	"icon": "arcamini_icon.svg",
+	"icon": "BALLATTAX.svg",
 	"icons": [
-		{ "src":"arcamini_icon.svg", "sizes":"any", "purpose":"maskable"} ],
+		{ "src":"BALLATTAX.svg", "sizes":"any", "purpose":"maskable"} ],
 	"window_width": 640,
 	"window_height": 480,
 	"audio_tracks": 4,
-	"scripts":[ "falling_blocks.js" ],
+	"scripts":[ "BALLATTAX.js" ],
 	"orientation": "landscape",
 	"background_color": "black",
 	"theme_color": "black"

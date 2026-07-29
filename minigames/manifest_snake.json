@@ -1,14 +1,11 @@
 {
-	"name":"ARCAMINI Falling Blocks (JS)",
+	"name":"ARCAMINI Snake (Python)",
 	"start_url": "./",
 	"display":"window",
-	"icon": "arcamini_icon.svg",
-	"icons": [
-		{ "src":"arcamini_icon.svg", "sizes":"any", "purpose":"maskable"} ],
 	"window_width": 640,
 	"window_height": 480,
 	"audio_tracks": 4,
-	"scripts":[ "falling_blocks.js" ],
+	"scripts":[ "snake.py" ],
 	"orientation": "landscape",
 	"background_color": "black",
 	"theme_color": "black"

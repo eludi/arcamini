@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'browser_runtime/**'
+      - 'minigames/**'
+      - 'ballattax/**'
+      - 'test/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -26,8 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stage site
+        # browser_runtime/index.html links to sibling example directories via
+        # ?game=../minigames/ style query params (see browser_runtime/index.html),
+        # so those directories need to be servable alongside browser_runtime/
+        # itself. Staged explicitly rather than uploading the whole checkout so
+        # .git and unrelated repo files never end up published.
+        run: |
+          mkdir _site
+          cp -r browser_runtime minigames ballattax test _site/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: browser_runtime
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

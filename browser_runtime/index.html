@@ -6,6 +6,7 @@
 	<meta name="viewport" content="user-scalable=no, width=device-width" />
 	<meta name="mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<base id="arcamini_base" href="./" />
 	<link rel="icon" />
 	<link rel="apple-touch-icon" />
 	<link rel="manifest" href="manifest.json" />
@@ -95,7 +96,19 @@ window.onerror = function(msg, url, line, col, err) {
 <script type="text/javascript" src="audio.js"></script>
 <script type="text/javascript" src="app.js"></script>
 <script type="text/javascript">
-fetch("manifest.json").then(resp=>resp.json()).then((data)=>{
+// ?game=<relative-dir>/ lets this runtime boot an example that lives
+// elsewhere in the arcamini repo (e.g. ../ballattax/) instead of the
+// manifest/scripts bundled alongside this index.html, without duplicating
+// its files: every relative fetch/import/resource load below resolves
+// against <base>, so pointing it at another directory is enough.
+// ?manifest=<filename> and ?script=<filename> override the manifest's own
+// filename and boot script, for directories that hold more than one example.
+const runtimeParams = new URLSearchParams(location.search);
+const gameDir = runtimeParams.get('game') || './';
+const manifestFile = runtimeParams.get('manifest') || 'manifest.json';
+document.getElementById('arcamini_base').href = new URL(gameDir, location.href).href;
+
+fetch(manifestFile).then(resp=>resp.json()).then((data)=>{
 	function iconByType(data, type) {
 		if(data.icons && Array.isArray(data.icons)) {
 			for(let i=0; i<data.icons.length; ++i) {
@@ -136,7 +149,7 @@ fetch("manifest.json").then(resp=>resp.json()).then((data)=>{
 			app.fullscreen(true);
 		arcamini.audio.resume();
 		document.getElementById('arcamini_load').style.display = 'none';
-		app._boot(data.scripts[0], app.args);
+		app._boot(runtimeParams.get('script') || data.scripts[0], app.args);
 	}
 	document.getElementById('arcamini_load').addEventListener("click", launch);
 

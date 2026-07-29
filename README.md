@@ -23,19 +23,17 @@ Primarily designed for Linux-based handheld consoles, with console-style input h
 
 [browser_runtime/](browser_runtime/) is a multi-language runtime implementing the same API as **arcamini**, backed by WebAssembly, WebGL and Web Audio. Point a web server at the directory, add your game scripts and assets, adjust the `manifest.json` scripts list,  and any arcamini game runs unmodified in a browser, no local installation or plugin required.
 
-▶️ [**Play it live**](https://eludi.github.io/arcamini/) on GitHub Pages.
+## Examples
+
+- [mini games](./minigames/) - Falling Blocks ([play live](https://eludi.github.io/arcamini/browser_runtime/), JS), Box Breaker ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_box_breaker.json), Python), Flappy Box ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_flappy_box.json), Python), Snake ([play live](https://eludi.github.io/arcamini/browser_runtime/?game=../minigames/&manifest=manifest_snake.json), Python) - each in just about 40-60 lines of code
+- [Render performance test](./perf/)
+- [BALLATTAX](./ballattax/) game - play live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_lua.json)
+- [Functional tests](./test/) ([run live](https://eludi.github.io/arcamini/browser_runtime/?game=../test/), JS)
+- [Browser runtime](./browser_runtime/) - multi-language runtime backed by WebGL/Web Audio, powering all the live demos linked above
 
 ## Documentation
 
 - [arcamini API reference](arcamini_api.md)
-
-## Examples
-
-- [mini games](./minigames/) - Falling Blocks, Flappy Box, each in just about 40-60 lines of code
-- [Render performance test](./perf/)
-- [BALLATTAX](./ballattax/) game
-- [Functional tests](./test/)
-- [Browser runtime](./browser_runtime/) - Falling Blocks running in a browser via WebGL/Web Audio ([play live](https://eludi.github.io/arcamini/))
 
 ## Language-specific Extensions
 
