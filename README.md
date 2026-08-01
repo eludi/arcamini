@@ -17,7 +17,7 @@ Supports both pixel sprites and scalable vector graphics (SVG) for crisp visuals
 
 ## Console Game Focus
 
-Primarily designed for Linux-based handheld consoles, with console-style input handling. Yet games run equally well on standard PCs.
+Primarily designed for Linux-based handheld consoles, with console-style input handling. Yet games run equally well on standard PCs and any modern webbrowser.
 
 ## Browser Runtime
 
@@ -29,6 +29,10 @@ The [browser runtime](browser_runtime/) is a multi-language runtime implementing
 - [Render performance test](./perf/)
 - [BALLATTAX](./ballattax/) game - play live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../ballattax/&manifest=manifest_lua.json)
 - [Functional tests](./test/) - run live in [JS](https://eludi.github.io/arcamini/browser_runtime/?game=../test/), [Python](https://eludi.github.io/arcamini/browser_runtime/?game=../test/&manifest=manifest_py.json), or [Lua](https://eludi.github.io/arcamini/browser_runtime/?game=../test/&manifest=manifest_lua.json)
+
+## Online IDE
+
+The [arcamini-IDE](ide/) is a browser-based mini IDE for writing, running, and exporting arcamini games in JavaScript, Python, or Lua — no local install required, making it a low-friction way to try arcamini or teach it in an introductory course. Write a project from scratch or fork one of the examples above, run it live against the unmodified [browser runtime](browser_runtime/), and export it as a self-contained game directory ready to deploy. [Try it live](https://eludi.github.io/arcamini/ide/).
 
 ## Documentation
 
