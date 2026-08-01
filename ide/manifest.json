@@ -1,0 +1,12 @@
+{
+	"name": "arcamini-IDE",
+	"short_name": "arcamini-IDE",
+	"description": "a browser-based mini IDE for arcamini",
+	"start_url": "./",
+	"display": "standalone",
+	"background_color": "#222",
+	"theme_color": "#222",
+	"icons": [
+		{ "src": "../browser_runtime/arcamini_icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+	]
+}

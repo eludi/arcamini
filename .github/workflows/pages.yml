@@ -8,6 +8,9 @@ on:
       - 'minigames/**'
       - 'ballattax/**'
       - 'test/**'
+      - 'ide/**'
+      - 'serviceworker.js'
+      - 'arcamini_api.md'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -33,11 +36,16 @@ jobs:
         # browser_runtime/index.html links to sibling example directories via
         # ?game=../minigames/ style query params (see browser_runtime/index.html),
         # so those directories need to be servable alongside browser_runtime/
-        # itself. Staged explicitly rather than uploading the whole checkout so
-        # .git and unrelated repo files never end up published.
+        # itself. ide/ needs the same siblings plus the root-scoped
+        # serviceworker.js (its scope has to cover both ide/ and
+        # browser_runtime/, so it can't live inside ide/ -- see
+        # serviceworker.js) and arcamini_api.md (linked from the IDE sidebar).
+        # Staged explicitly rather than uploading the whole checkout so .git
+        # and unrelated repo files never end up published.
         run: |
           mkdir _site
-          cp -r browser_runtime minigames ballattax test _site/
+          cp -r browser_runtime minigames ballattax test ide _site/
+          cp serviceworker.js arcamini_api.md _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
