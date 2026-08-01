@@ -125,6 +125,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	flex: 0 0 auto;
 	overflow-x: hidden;
 	overflow-y: auto;
+	touch-action: pan-y;
 	transition: all 0.25s ease-out;
 }
 .open {
@@ -152,6 +153,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	box-sizing: border-box;
 	min-height: 0;
 	overflow-y: auto;
+	touch-action: pan-y;
 	padding: 1em 1.2em;
 	margin: 0 0.5em 0 0;
 	background-color: var(--border-bg-color);
@@ -193,12 +195,25 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	display: block;
 	box-sizing: border-box;
 	width: 100%;
-	padding: 0.4em;
+	padding: 0.4em 2.8em 0.4em 0.4em;
 	border: 1px solid var(--border-fg-color);
 	border-radius: 4px;
 	background-color: var(--border-bg-color);
 	color: var(--border-fg-color);
 	font-family: inherit;
+	/* WebKit's native menulist appearance otherwise overrides
+	   background-color, rendering as light gray regardless of theme */
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	/* replaces the native dropdown arrow appearance:none removes -- fixed
+	   light gray rather than currentColor: tested and confirmed currentColor
+	   does not resolve for a <select>'s data-URI SVG background-image in
+	   this environment, despite being modern WebKit/Chromium */
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23aaaaaa' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.4em center;
+	background-size: 2.2em;
 }
 .sidebar select option {
 	background-color: var(--border-bg-color);
@@ -275,6 +290,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	margin: 0 0.5em;
 	height:calc(100% - 48px - 1.35em);
 	overflow-y: auto;
+	touch-action: pan-y;
 }
 .form input, .form select {
 	font-weight: bold;
