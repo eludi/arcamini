@@ -25,10 +25,10 @@
 	padding: 0;
 }
 body {
-	--editor-fg-color: #9ad;
-	--editor-bg-color: #109;
-	--border-bg-color: #68c;
-	--border-fg-color: #def;
+	--editor-fg-color: #5ff;
+	--editor-bg-color: #023;
+	--border-bg-color: #000;
+	--border-fg-color: #2fb;
 }
 body, html {
 	overflow: hidden;
@@ -140,8 +140,23 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	padding:0.5em;
 }
 .sidebar button, .sidebar label, .sidebar select {
-	color:white;
+	color:#5fc;
 	font-size: inherit;
+}
+.sidebar select {
+	display: block;
+	box-sizaing: border-box;
+	width: 100%;
+	padding: 0.4em;
+	border: 1px solid var(--border-fg-color);
+	border-radius: 4px;
+	background-color: var(--border-bg-color);
+	color: var(--border-fg-color);
+	font-family: inherit;
+}
+.sidebar select option {
+	background-color: var(--border-bg-color);
+	color: var(--border-fg-color);
 }
 .sidebar hr {
 	border:0;
@@ -296,7 +311,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 						><li><button value="saveFS">export .json</button></li
 						><li><button value="compile">package .zip</button></li
 						><li><hr/></li
-						><li><a href="../arcamini_api.md" target="_blank" style="color:white;">API reference</a></li
+						><li><a href="../arcamini_api.md" target="_blank" style="color:#5ff;">API reference</a></li
 					></ul
 				></nav
 				><textarea id="editor" wrap="off" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
