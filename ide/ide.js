@@ -155,6 +155,57 @@ ide.init = async function() {
 	});
 
 	this.tStart = new Date();
+	this.loadApiReference();
+};
+
+//--- API reference side panel (see index.html's #apiref_panel + its media
+//--- query, only visible once the window is wide enough to spare the room)
+ide.loadApiReference = async function() {
+	const panel = document.getElementById('apiref_panel');
+	if(!panel)
+		return;
+	try {
+		const resp = await fetch('../arcamini_api.md');
+		if(!resp.ok)
+			throw new Error(resp.status);
+		panel.innerHTML = this.renderMarkdown(await resp.text());
+	} catch(err) {
+		panel.innerHTML = '<p>API reference unavailable (' + err + ').</p>';
+	}
+};
+// Deliberately not a general CommonMark parser -- arcamini_api.md only ever
+// uses headers, bullet lists, inline code/bold and plain paragraphs, so a
+// line-based pass covers it without vendoring a markdown library.
+ide.renderMarkdown = function(text) {
+	const esc = (s)=> s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+	const inline = (s)=> esc(s)
+		.replace(/`([^`]+)`/g, '<code>$1</code>')
+		.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+	let html = '', inList = false;
+	const closeList = ()=>{ if(inList) { html += '</ul>'; inList = false; } };
+	for(const line of text.split('\n')) {
+		const heading = line.match(/^(#{1,4})\s+(.*)$/);
+		if(heading) {
+			closeList();
+			html += `<h${heading[1].length}>${inline(heading[2])}</h${heading[1].length}>`;
+			continue;
+		}
+		const item = line.match(/^-\s+(.*)$/);
+		if(item) {
+			if(!inList) { html += '<ul>'; inList = true; }
+			html += `<li>${inline(item[1])}</li>`;
+			continue;
+		}
+		if(line.trim() === '') {
+			closeList();
+			continue;
+		}
+		closeList();
+		html += `<p>${inline(line)}</p>`;
+	}
+	closeList();
+	return html;
 };
 
 //--- project (applet) storage: plain localStorage, one JSON blob --------

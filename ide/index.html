@@ -119,6 +119,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	display: flex;
 	width:100%;
 	flex-grow:1;
+	min-height: 0;
 }
 #editor_sidebar {
 	flex: 0 0 auto;
@@ -139,13 +140,58 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 #editor_sidebar > ul > li {
 	padding:0.5em;
 }
+/* API reference side panel: only shown once the window is wide enough that
+   the editor still keeps roughly 80 monospace columns (~800px at 16px bold
+   monospace) after making room for the panel itself -- see index.html's
+   #apiref_panel + ide.js's loadApiReference/renderMarkdown. */
+#apiref_panel {
+	display: none;
+	/* stays at 380px until the window is quite wide, then gently grows
+	   (24vw) up to a 560px cap so lines don't get uncomfortably long */
+	flex: 0 0 clamp(380px, 24vw, 560px);
+	box-sizing: border-box;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 1em 1.2em;
+	margin: 0 0.5em 0 0;
+	background-color: var(--border-bg-color);
+	color: var(--editor-fg-color);
+	font-family: sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+}
+@media (min-width: 1200px) {
+	#apiref_panel {
+		display: block;
+	}
+}
+#apiref_panel h1, #apiref_panel h2, #apiref_panel h3, #apiref_panel h4 {
+	color: var(--border-fg-color);
+	margin: 1em 0 0.3em;
+}
+#apiref_panel h1 { font-size: 1.3em; }
+#apiref_panel h2 { font-size: 1.15em; border-bottom: 1px solid var(--border-fg-color); padding-bottom: 0.2em; }
+#apiref_panel h3 { font-size: 1.05em; }
+#apiref_panel h4 { font-size: 0.95em; opacity: 0.85; }
+#apiref_panel p, #apiref_panel ul {
+	margin: 0.3em 0;
+}
+#apiref_panel ul {
+	padding-left: 1.4em;
+}
+#apiref_panel code {
+	font-family: monospace;
+	background: rgba(255,255,255,0.08);
+	padding: 0 0.25em;
+	border-radius: 3px;
+}
 .sidebar button, .sidebar label, .sidebar select {
 	color:#5fc;
 	font-size: inherit;
 }
 .sidebar select {
 	display: block;
-	box-sizaing: border-box;
+	box-sizing: border-box;
 	width: 100%;
 	padding: 0.4em;
 	border: 1px solid var(--border-fg-color);
@@ -316,6 +362,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 				></nav
 				><textarea id="editor" wrap="off" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
 				></textarea
+				><aside id="apiref_panel"></aside
 			></div
 			><div id="editor_bottom"
 				><div id="console" class="console_small"></div
