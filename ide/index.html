@@ -162,10 +162,33 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 	font-size: 14px;
 	line-height: 1.5;
 }
-@media (min-width: 1200px) {
-	#apiref_panel {
-		display: block;
+#apiref_panel.visible {
+	display: block;
+}
+/* phone portrait: no room for the panel beside the editor, so it becomes a
+   full-screen overlay instead of a fixed-width column. Positioned relative
+   to #editor_middle rather than the viewport (position:fixed; inset:0)
+   -- that element is already exactly the region between the toolbar and
+   #editor_bottom via ordinary flex layout (including when the console
+   expands taller), so there's no need to duplicate/guess either bar's
+   height, and no overlap for #btn_toggleHelp -- the only way to close the
+   overlay -- to get lifted above via z-index tricks. */
+@media (max-width: 600px) and (orientation: portrait) {
+	#editor_middle {
+		position: relative;
 	}
+	#apiref_panel.visible {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		flex: none;
+		margin: 0;
+	}
+}
+#btn_toggleHelp {
+	color: var(--border-fg-color);
+	font-weight: bold;
+	font-size: 14px;
 }
 #apiref_panel h1, #apiref_panel h2, #apiref_panel h3, #apiref_panel h4 {
 	color: var(--border-fg-color);
@@ -373,7 +396,7 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 						><li><button value="saveFS">export .json</button></li
 						><li><button value="compile">package .zip</button></li
 						><li><hr/></li
-						><li><a href="../arcamini_api.md" target="_blank" style="color:#5ff;">API reference</a></li
+						><li><a href="https://github.com/eludi/arcamini" target="_blank" style="color:#5ff;">about arcamini</a></li
 					></ul
 				></nav
 				><textarea id="editor" wrap="off" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
@@ -381,8 +404,9 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 				><aside id="apiref_panel"></aside
 			></div
 			><div id="editor_bottom"
+				><button id="btn_toggleConsole" value="toggleConsole"><svg viewbox="0 0 32 16"><path style="fill:none;stroke:white;stroke-width:2;" d="M 4 14 l 11 -11 l 11 11"></path></svg></button
 				><div id="console" class="console_small"></div
-				><button id="btn_toggleConsole" value="toggleConsole"><svg viewbox="0 0 32 16"><path style="fill:none;stroke:white;stroke-width:2;" d="M 3 15 l 13 -13 l 13 13"></path></svg></button
+				><button id="btn_toggleHelp" value="toggleHelp" title="help" style="color:white;">[&nbsp;?&nbsp;]</button
 			></div
 		></div
 		><div id="screen_files"

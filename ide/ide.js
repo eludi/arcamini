@@ -156,10 +156,15 @@ ide.init = async function() {
 
 	this.tStart = new Date();
 	this.loadApiReference();
+	// initial visibility only -- past load time this is purely manual via
+	// #btn_toggleHelp ('toggleHelp' in handleUIEvent), so resizing an
+	// already-open/closed window doesn't fight the user's own choice
+	if(window.innerWidth >= 1200)
+		document.getElementById('apiref_panel').classList.add('visible');
 };
 
-//--- API reference side panel (see index.html's #apiref_panel + its media
-//--- query, only visible once the window is wide enough to spare the room)
+//--- API reference side panel (see index.html's #apiref_panel, toggled by
+//--- #btn_toggleHelp via the 'visible' class -- see handleUIEvent)
 ide.loadApiReference = async function() {
 	const panel = document.getElementById('apiref_panel');
 	if(!panel)
@@ -552,6 +557,8 @@ ide.handleUIEvent = function(args) {
 		document.getElementById('btn_toggleConsole').style.transform =
 			(el.className=='console_big') ? 'scaleY(-1)' : 'scaleY(1)';
 	}
+	else if(args[0]=='toggleHelp')
+		document.getElementById('apiref_panel').classList.toggle('visible');
 	else if(args[0]=='createRes')
 		this.createResource(args[1]);
 	else if(args[0]=='closeAuxEditor')
