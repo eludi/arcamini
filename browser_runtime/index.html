@@ -86,11 +86,66 @@ body {
 		></div
 		><canvas id="arcamini_canvas">this webapp requires javascript to run.</canvas
 	></div
-><script type="text/javascript"> // for debugging
-window.onerror = function(msg, url, line, col, err) {
-	const stack = (err&&err.stack) ? ('\n'+err.stack) : '';
-	alert('Error at '+url+':'+line+': '+msg+stack);
-}
+><script type="text/javascript"> // TEMPORARY: on-device error/console overlay for debugging iPad Safari,
+// which has no accessible devtools without a tethered Mac. Remove once the
+// underlying issue is diagnosed. Installed before graphicsGL.js/audio.js/
+// app.js so it catches even early load failures.
+(function() {
+	const box = document.createElement('div');
+	box.id = 'arcamini_debug_overlay';
+	Object.assign(box.style, {
+		position: 'fixed', left: '0', right: '0', bottom: '0', maxHeight: '45vh',
+		overflowY: 'auto', margin: '0', padding: '0.5em',
+		font: '11px/1.4 monospace', color: '#0f0', background: 'rgba(0,0,0,0.85)',
+		whiteSpace: 'pre-wrap', wordBreak: 'break-word', zIndex: 999999, display: 'none',
+		boxSizing: 'border-box', borderTop: '1px solid #0f0'
+	});
+	document.body.appendChild(box);
+
+	const tab = document.createElement('div');
+	tab.textContent = 'debug';
+	Object.assign(tab.style, {
+		position: 'fixed', right: '0', bottom: '0', padding: '0.3em 0.6em',
+		font: '11px monospace', color: '#0f0', background: 'rgba(0,0,0,0.6)',
+		zIndex: 1000000, cursor: 'pointer', display: 'none'
+	});
+	tab.addEventListener('click', ()=>{
+		box.style.display = box.style.display === 'none' ? 'block' : 'none';
+	});
+	document.body.appendChild(tab);
+
+	function fmt(a) {
+		if(a instanceof Error) return a.message + (a.stack ? '\n' + a.stack : '');
+		if(typeof a === 'string') return a;
+		try { return JSON.stringify(a); } catch(e) { return String(a); }
+	}
+	function log(kind, args) {
+		const line = document.createElement('div');
+		if(kind === 'error') line.style.color = '#f66';
+		else if(kind === 'warn') line.style.color = '#fd6';
+		line.textContent = '[' + kind + '] ' + args.map(fmt).join(' ');
+		box.appendChild(line);
+		box.scrollTop = box.scrollHeight;
+		tab.style.display = 'block';
+		if(kind === 'error')
+			box.style.display = 'block';
+	}
+
+	['log', 'warn', 'error', 'info'].forEach((kind)=>{
+		const orig = console[kind];
+		console[kind] = function(...args) {
+			log(kind, args);
+			orig.apply(console, args);
+		};
+	});
+
+	window.addEventListener('error', (evt)=>{
+		log('error', [evt.message + ' @ ' + evt.filename + ':' + evt.lineno, (evt.error && evt.error.stack) || '']);
+	});
+	window.addEventListener('unhandledrejection', (evt)=>{
+		log('error', ['Unhandled promise rejection:', (evt.reason && evt.reason.stack) || evt.reason]);
+	});
+})();
 </script>
 <script type="text/javascript" src="graphicsGL.js"></script>
 <script type="text/javascript" src="audio.js"></script>
