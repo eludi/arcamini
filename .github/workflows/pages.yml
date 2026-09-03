@@ -46,6 +46,9 @@ jobs:
           mkdir _site
           cp -r browser_runtime minigames ballattax test ide _site/
           cp serviceworker.js arcamini_api.md _site/
+          printf '{"sha":"%s","builtAt":"%s"}\n' \
+            "$(git rev-parse --short HEAD)" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > _site/build_info.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

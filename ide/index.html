@@ -471,5 +471,27 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 				<path d="M 5.5,17 C 4.7206526,17 4.0070091,17.188406 3.4570312,17.525933 2.9070534,17.863459 2.5,18.385192 2.5,19 c 0,0.614808 0.4070534,1.136541 0.9570312,1.474067 C 4.0070091,20.811594 4.7206526,21 5.5,21 6.2793474,21 6.9929909,20.811594 7.5429688,20.474067 8.0929466,20.136541 8.5,19.614808 8.5,19 8.5,18.385192 8.0929466,17.863459 7.5429688,17.525933 6.9929909,17.188406 6.2793474,17 5.5,17 Z" />
 			</svg
 		></div
-	></body>
+	></body
+	><script type="text/javascript"> // TEMPORARY: shows which deploy is actually loaded, to rule out a stale
+	// cache (GitHub Pages, or iOS's aggressive disk cache for an installed
+	// home-screen app) when a fix seems not to have taken effect. Fetched
+	// with cache: 'no-store' so it always reflects what's actually
+	// deployed, not a cached copy.
+	(function() {
+		const url = new URL('../build_info.json', document.baseURI).href;
+		const label = document.createElement('div');
+		Object.assign(label.style, {
+			position: 'fixed', left: '0', top: '0', padding: '0.15em 0.4em',
+			font: '10px monospace', color: '#888', background: 'rgba(0,0,0,0.4)',
+			zIndex: 1000000, pointerEvents: 'none'
+		});
+		label.textContent = 'build: loading…';
+		document.body.appendChild(label);
+		fetch(url, {cache: 'no-store'}).then((r)=> r.json()).then((info)=>{
+			label.textContent = 'build ' + info.sha + ' · ' + info.builtAt;
+		}).catch(()=>{
+			label.textContent = 'build: unknown (offline, or not deployed yet)';
+		});
+	})();
+	</script>
 </html>

@@ -148,6 +148,29 @@ body {
 	});
 })();
 </script>
+<script type="text/javascript"> // TEMPORARY: shows which deploy is actually loaded, to rule out a stale
+// cache (GitHub Pages, or iOS's aggressive disk cache for an installed
+// home-screen app) when a fix seems not to have taken effect. Resolved
+// against document.baseURI *now*, before the ?game= handling below can
+// rewrite <base>, and fetched with cache: 'no-store' so it always reflects
+// what's actually deployed, not a cached copy.
+(function() {
+	const url = new URL('../build_info.json', document.baseURI).href;
+	const label = document.createElement('div');
+	Object.assign(label.style, {
+		position: 'fixed', left: '0', top: '0', padding: '0.15em 0.4em',
+		font: '10px monospace', color: '#888', background: 'rgba(0,0,0,0.4)',
+		zIndex: 1000000, pointerEvents: 'none'
+	});
+	label.textContent = 'build: loading…';
+	document.body.appendChild(label);
+	fetch(url, {cache: 'no-store'}).then((r)=> r.json()).then((info)=>{
+		label.textContent = 'build ' + info.sha + ' · ' + info.builtAt;
+	}).catch(()=>{
+		label.textContent = 'build: unknown (offline, or not deployed yet)';
+	});
+})();
+</script>
 <script type="text/javascript" src="graphicsGL.js"></script>
 <script type="text/javascript" src="audio.js"></script>
 <script type="text/javascript" src="app.js"></script>
