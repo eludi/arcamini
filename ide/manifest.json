@@ -3,6 +3,7 @@
 	"short_name": "arcamini-IDE",
 	"description": "a browser-based mini IDE for arcamini",
 	"start_url": "./",
+	"scope": "../",
 	"display": "standalone",
 	"background_color": "#222",
 	"theme_color": "#222",
