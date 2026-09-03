@@ -483,7 +483,11 @@ button:hover, .sidebar label:hover, .toolbar label:hover, .clickable:hover {
 		Object.assign(label.style, {
 			position: 'fixed', left: '0', top: '0', padding: '0.15em 0.4em',
 			font: '10px monospace', color: '#888', background: 'rgba(0,0,0,0.4)',
-			zIndex: 1000000, pointerEvents: 'none'
+			zIndex: 1000000, pointerEvents: 'none',
+			// ide/index.html's screen-switcher CSS both hides every body > *
+			// except :first-child, and stretches all of them to 100%/100% --
+			// this label is appended last, so both need overriding here.
+			display: 'block', width: 'auto', height: 'auto'
 		});
 		label.textContent = 'build: loading…';
 		document.body.appendChild(label);
