@@ -1,4 +1,4 @@
-# ![](test/arcamini_icon.svg "arcamini logo") arcamini
+# ![](browser_runtime/arcamini_icon.svg "arcamini logo") arcamini
 
 **arcamini** is a friendly, lightweight, and multi-language runtime for developing 2D console games.
 
