@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><g stroke="#000" stroke-width="4"><path d="M24 72L4 92V24L24 4h48l20 20v68L72 72V24H24z" fill="#af5" stroke-linejoin="round"/><path d="M36 36h24v24H36z" fill="#a5f"/></g><path d="M4 92l20-20V24H4v68" fill="#5af"/><path d="M24 24h48V4H24v20" fill="#ffe855"/><path d="M4 24h12 8v-8V4z" fill="#96df55"/><path d="M72 24v48l20 20V24H72" fill="#f5a"/><path d="M72 16v8h8 12L72 4z" fill="#fa5"/><path d="M24 72L4 92V24L24 4h48l20 20v68L72 72V24H24z" fill="none" stroke="#000" stroke-width="4" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="25.6mm" height="25.6mm" viewBox="0 0 25.6 25.6">
+  <!-- generated 2026-09-20T07:27:11.600Z by https://precidra.app -->
+  <g id="layer-0">
+    <path d="M 25.6000,25.6000 L 25.6000,0.0000 L 0.0000,0.0000 L 0.0000,25.6000 Z" stroke="none" fill="#002244"/>
+    <path d="M 21.1867,22.1133 L 21.1867,17.0333 L 16.9533,12.8000 L 12.7200,17.0333 L 8.4867,12.8000 L 4.2533,17.0333 L 4.2533,22.1133 L 8.4867,17.8800 L 12.7200,22.1133 L 16.9533,17.8800 Z" stroke="black" stroke-width="0.25" fill="#00aaff"/>
+    <path d="M 8.4867,12.8000 L 12.7200,8.5667 L 16.9533,12.8000 L 16.9533,7.7200 L 12.7200,3.4867 L 8.4867,7.7200 Z" stroke="black" stroke-width="0.25" fill="#00ffcc"/>
+    <path d="M 8.4867,12.8000 L 4.2533,17.0333 L 5.2900,17.5200 Z" stroke="none" fill="#ffffff" fill-opacity="0.2500"/>
+    <path d="M 12.7200,3.4867 L 8.4867,7.7200 L 9.5400,8.0200 Z" stroke="none" fill="#ffffff" fill-opacity="0.5000"/>
+    <path d="M 8.5400,16.5200 L 8.4867,17.8800 L 12.7200,22.1133 Z" stroke="none" fill="#ffffff" fill-opacity="0.2500"/>
+    <path d="M 16.9533,12.8000 L 12.7200,17.0333 L 13.2900,18.0200 Z" stroke="none" fill="#ffffff" fill-opacity="0.2500"/>
+    <path d="M 17.0067,16.5200 L 16.9533,17.8800 L 21.1867,22.1133 Z" stroke="none" fill="#ffffff" fill-opacity="0.2500"/>
+    <path d="M 12.7200,22.1133 L 17.0067,17.9333 L 17.0067,16.5200 Z" stroke="none" fill="#7700cc" fill-opacity="0.2500"/>
+    <path d="M 4.2533,22.1133 L 8.5400,17.9333 L 8.5400,16.5200 Z" stroke="none" fill="#7700cc" fill-opacity="0.2500"/>
+    <path d="M 8.4867,12.8000 L 12.7733,8.6200 L 12.7733,7.2067 Z" stroke="none" fill="#7700cc" fill-opacity="0.2500"/>
+    <path d="M 12.7733,7.2067 L 12.7200,8.5667 L 16.9533,12.8000 Z" stroke="none" fill="#ffffff" fill-opacity="0.5000"/>
+  </g>
+</svg>
