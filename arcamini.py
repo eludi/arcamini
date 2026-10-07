@@ -252,6 +252,7 @@ OP_DRAWRECT   = 8
 OP_DRAWLINE   = 9
 OP_DRAWIMAGE  = 10
 OP_FILLTEXT   = 11
+OP_BLEND      = 12
 
 class Gfx:
     """arcamini graphics context"""
@@ -279,6 +280,9 @@ class Gfx:
 
     def lineWidth(self, w):
         self._emit("f", OP_LINEWIDTH, w)
+
+    def blend(self, mode):
+        self._emit("i", OP_BLEND, mode)
 
     def transform(self, x: float, y: float, rot: float = 0.0, sc: float = 1.0):
         self._emit("ffff", OP_TRANSFORM, x, y, rot, sc)

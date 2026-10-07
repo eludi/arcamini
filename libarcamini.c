@@ -24,6 +24,7 @@ enum {
     GFX_OP_DRAWLINE,
     GFX_OP_DRAWIMAGE,
     GFX_OP_FILLTEXT,
+    GFX_OP_BLEND,
 };
 
 void gfxDrawBatch(const uint8_t* ops, uint32_t ops_len, const char* strings, uint32_t strings_len) {
@@ -42,6 +43,11 @@ void gfxDrawBatch(const uint8_t* ops, uint32_t ops_len, const char* strings, uin
                 float w;
                 memcpy(&w, p, 4); p += sizeof(w);
                 gfxLineWidth(w);
+            } break;
+            case GFX_OP_BLEND: {
+                int mode;
+                memcpy(&mode, p, 4); p += sizeof(mode);
+                gfxBlend(mode);
             } break;
             case GFX_OP_TRANSFORM: {
                 float x, y, rot, sc;

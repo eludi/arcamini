@@ -53,6 +53,7 @@ let app = arcamini.app = (function(canvas_id='arcamini_canvas') {
 	window.gfx = {
 		color: (c)=> gfxImpl.color(c),
 		lineWidth: (w)=> gfxImpl.lineWidth(w),
+		blend: (m)=>gfxImpl.blend(m),
 		transform: (x, y, rot=0, sc=1.0)=> gfxImpl.transform(x, y, rot, sc),
 		save: ()=> gfxImpl.save(),
 		restore: ()=> gfxImpl.restore(),

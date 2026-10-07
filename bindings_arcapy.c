@@ -92,6 +92,15 @@ static bool py_gfxLineWidth(int argc, py_StackRef argv) {
 	return true;
 }
 
+static bool py_gfxBlend(int argc, py_StackRef argv) {
+    int64_t mode;
+    if(!py_castint(py_arg(0), &mode))
+        return false;
+    gfxBlend((int)mode);
+    py_newnone(py_retval());
+    return true;
+}
+
 static bool py_gfxTransform(int argc, py_StackRef argv) {
 	float x, y, rot=0.0f, sc=1.0f;
 	if(!py_castfloat32(py_arg(0), &x) ||
@@ -476,6 +485,7 @@ static void bindArcamini() {
 	gfx_ns = py_newmodule("gfx");
 	py_bindfunc(gfx_ns, "color", py_gfxColor);
 	py_bindfunc(gfx_ns, "lineWidth", py_gfxLineWidth);
+	py_bindfunc(gfx_ns, "blend", py_gfxBlend);
 	py_bindfunc(gfx_ns, "transform", py_gfxTransform);
 	py_bindfunc(gfx_ns, "save", py_gfxStateSave);
 	py_bindfunc(gfx_ns, "restore", py_gfxStateRestore);

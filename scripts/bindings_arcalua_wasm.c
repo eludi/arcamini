@@ -98,6 +98,7 @@ static const luaL_Reg window_funcs[] = {
 // --- Graphics Functions ---
 EM_JS(void, js_gfxColor, (uint32_t color), { window.gfx.color(color); });
 EM_JS(void, js_gfxLineWidth, (float w), { window.gfx.lineWidth(w); });
+EM_JS(void, js_gfxBlend, (int mode), { window.gfx.blend(mode); });
 EM_JS(void, js_gfxTransform, (float x, float y, float rot, float sc), { window.gfx.transform(x, y, rot, sc); });
 EM_JS(void, js_gfxStateSave, (), { window.gfx.save(); });
 EM_JS(void, js_gfxStateRestore, (), { window.gfx.restore(); });
@@ -121,6 +122,12 @@ static int lua_gfxColor(lua_State *L) {
 static int lua_gfxLineWidth(lua_State *L) {
     float width = (float)luaL_checknumber(L, 1);
     js_gfxLineWidth(width);
+    return 0;
+}
+
+static int lua_gfxBlend(lua_State *L) {
+    int mode = (int)luaL_checkinteger(L, 1);
+    js_gfxBlend(mode);
     return 0;
 }
 
@@ -205,6 +212,7 @@ static int lua_gfxFillTextAlign(lua_State *L) {
 static const luaL_Reg gfx_funcs[] = {
     {"color", lua_gfxColor},
     {"lineWidth", lua_gfxLineWidth},
+    {"blend", lua_gfxBlend},
     {"transform", lua_gfxTransform},
     {"save", lua_gfxStateSave},
     {"restore", lua_gfxStateRestore},

@@ -20,6 +20,8 @@ extern void WindowClearColor(uint32_t color);
 extern void gfxColor(uint32_t color);
 /// sets current line width
 extern void gfxLineWidth(float w);
+/// sets current blend mode
+extern void gfxBlend(int mode);
 /// multiplies current transformation with this additional transformation
 extern void gfxTransform(float x, float y, float rot, float sc);
 /// pushes current state onto a stack

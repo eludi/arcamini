@@ -90,6 +90,7 @@ static bool py_switchScene(int argc, py_StackRef argv) {
 // --- gfx bindings ---
 EM_JS(void, js_gfxColor, (uint32_t color), { window.gfx.color(color); });
 EM_JS(void, js_gfxLineWidth, (float w), { window.gfx.lineWidth(w); });
+EM_JS(void, js_gfxBlend, (int mode), { window.gfx.blend(mode); });
 EM_JS(void, js_gfxTransform, (float x, float y, float rot, float sc), { window.gfx.transform(x, y, rot, sc); });
 EM_JS(void, js_gfxStateSave, (), { window.gfx.save(); });
 EM_JS(void, js_gfxStateRestore, (), { window.gfx.restore(); });
@@ -118,6 +119,15 @@ static bool py_gfxLineWidth(int argc, py_StackRef argv) {
     if(!py_castfloat32(py_arg(0), &w))
         return false;
     js_gfxLineWidth(w);
+    py_newnone(py_retval());
+    return true;
+}
+
+static bool py_gfxBlend(int argc, py_StackRef argv) {
+    int64_t mode;
+    if(!py_castint(py_arg(0), &mode))
+        return false;
+    js_gfxBlend((int)mode);
     py_newnone(py_retval());
     return true;
 }
@@ -572,6 +582,7 @@ static void bindArcamini() {
     gfx_ns = py_newmodule("gfx");
     py_bindfunc(gfx_ns, "color", py_gfxColor);
     py_bindfunc(gfx_ns, "lineWidth", py_gfxLineWidth);
+    py_bindfunc(gfx_ns, "blend", py_gfxBlend);
     py_bindfunc(gfx_ns, "transform", py_gfxTransform);
     py_bindfunc(gfx_ns, "save", py_gfxStateSave);
     py_bindfunc(gfx_ns, "restore", py_gfxStateRestore);

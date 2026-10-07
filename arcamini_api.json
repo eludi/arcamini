@@ -98,6 +98,14 @@
 				"returnType": null,
 				"description": "Sets the line width for drawLine and drawRect"
 			},
+			{ "function":"blend",
+				"parameters": [
+					{ "name":"mode", "type":"int", "description": "blend mode" }
+				],
+				"returnType": null,
+				"description": "Sets the blend mode. 0 = NONE, 1 = ALPHA (default), 2 = ADD, 4 = MOD, 8 = MUL."
+
+			},
 			{ "function":"transform",
 				"parameters": [
 					{ "name":"x", "type":"float", "description": "the translation in horizontal direction" },

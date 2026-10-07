@@ -515,6 +515,7 @@ return function (canvas, capacity=500, onDefaultFontReady) {
 		mat[1] = -mat[3]; mat[4] = mat[0]; mat[7] = transf[1];
 	}
 
+	let blendFunc = 1;
 	const texCoordMax = 16383;
 	let fonts = [], textures=[], tex=null;
 
@@ -595,7 +596,17 @@ return function (canvas, capacity=500, onDefaultFontReady) {
 	}
 
 	function setBlendFunc() {
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+		switch(blendFunc) {
+		case 0: gl.blendFunc(gl.ONE, gl.ZERO); break;
+		case 1:
+			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); break;
+		case 2:
+			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE); break;
+		case 4:
+			gl.blendFuncSeparate(gl.DST_COLOR, gl.ZERO, gl.ZERO, gl.ONE); break;
+		case 8:
+			gl.blendFuncSeparate(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA); break;
+		}
 	}
 
 	/// loads a texture from a URL
@@ -829,6 +840,16 @@ return function (canvas, capacity=500, onDefaultFontReady) {
 		this.flush();
 		gs[gs.length-1][5] = Number(w);
 	}
+	this.blend = function(mode) {
+		if(mode===undefined)
+			return blendFunc;
+		if(mode===blendFunc)
+			return this;
+		this.flush();
+		blendFunc = mode;
+		setBlendFunc();
+		return this;
+	}
 
 	this.save = function() {
 		if(gs.length < transfMax)
@@ -858,6 +879,7 @@ return function (canvas, capacity=500, onDefaultFontReady) {
 		gs[0][3] = gs[0][5] = 1.0;
 		gs[0][4] = fpack.rgba(255,255,255);
 		setMat(gs[0], mat);
+		blendFunc = 1;
 		setBlendFunc();
 	}
 

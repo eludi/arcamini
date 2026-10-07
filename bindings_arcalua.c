@@ -96,6 +96,12 @@ static int lua_gfxLineWidth(lua_State *L) {
     return 0;
 }
 
+static int lua_gfxBlend(lua_State *L) {
+    int mode = (int)luaL_checkinteger(L, 1);
+    gfxBlend(mode);
+    return 0;
+}
+
 static int lua_gfxTransform(lua_State *L) {
     float x = (float)luaL_checknumber(L, 1);
     float y = (float)luaL_checknumber(L, 2);
@@ -178,6 +184,7 @@ static int lua_gfxFillTextAlign(lua_State *L) {
 static const luaL_Reg gfx_funcs[] = {
     {"color", lua_gfxColor},
     {"lineWidth", lua_gfxLineWidth},
+    {"blend", lua_gfxBlend},
     {"transform", lua_gfxTransform},
     {"save", lua_gfxStateSave},
     {"restore", lua_gfxStateRestore},

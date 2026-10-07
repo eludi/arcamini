@@ -351,6 +351,14 @@ static JSValue js_gfxLineWidth(JSContext *ctx, JSValueConst this_val, int argc, 
     return JS_UNDEFINED;
 }
 
+static JSValue js_gfxBlend(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    int32_t mode;
+    if (JS_ToInt32(ctx, &mode, argv[0]))
+        return JS_ThrowTypeError(ctx, "gfx.blend expects integer mode");
+    gfxBlend(mode);
+    return JS_UNDEFINED;
+}
+
 static JSValue js_gfxTransform(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     double x, y, rot, sc;
     if (JS_ToFloat64(ctx, &x, argv[0]) ||
@@ -451,6 +459,7 @@ static JSValue js_gfxFillTextAlign(JSContext *ctx, JSValueConst this_val, int ar
 static const JSCFunctionListEntry js_gfx_funcs[] = {
     JS_CFUNC_DEF("color", 1, js_gfxColor),
     JS_CFUNC_DEF("lineWidth", 1, js_gfxLineWidth),
+    JS_CFUNC_DEF("blend", 1, js_gfxBlend),
     JS_CFUNC_DEF("transform", 4, js_gfxTransform),
     JS_CFUNC_DEF("save", 0, js_gfxStateSave),
     JS_CFUNC_DEF("restore", 0, js_gfxStateRestore),
